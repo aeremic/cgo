@@ -31,6 +31,18 @@ func TestRead(t *testing.T) {
 		};
 
 		let result = add(a, b);
+
+		!-/*5;
+		5 < 10 > 5
+
+		if (5 < 10) {
+			return true;
+		} else {
+			return false;
+		}
+
+		10 == 10;
+		10 != 9;
 	`
 
 	expectedTokens := []struct {
@@ -74,6 +86,45 @@ func TestRead(t *testing.T) {
 		{COMMA, ","},
 		{IDENT, "b"},
 		{RPAREN, ")"},
+		{SEMICOLON, ";"},
+
+		{BANG, "!"},
+		{MINUS, "-"},
+		{SLASH, "/"},
+		{ASTERISK, "*"},
+		{INT, "5"},
+		{SEMICOLON, ";"},
+		{INT, "5"},
+		{LT, "<"},
+		{INT, "10"},
+		{GT, ">"},
+		{INT, "5"},
+
+		{IF, "if"},
+		{LPAREN, "("},
+		{INT, "5"},
+		{LT, "<"},
+		{INT, "10"},
+		{RPAREN, ")"},
+		{LBRACE, "{"},
+		{RETURN, "return"},
+		{TRUE, "true"},
+		{SEMICOLON, ";"},
+		{RBRACE, "}"},
+		{ELSE, "else"},
+		{LBRACE, "{"},
+		{RETURN, "return"},
+		{FALSE, "false"},
+		{SEMICOLON, ";"},
+		{RBRACE, "}"},
+
+		{INT, "10"},
+		{EQUALS, "=="},
+		{INT, "10"},
+		{SEMICOLON, ";"},
+		{INT, "10"},
+		{NOT_EQUALS, "!="},
+		{INT, "9"},
 		{SEMICOLON, ";"},
 	}
 

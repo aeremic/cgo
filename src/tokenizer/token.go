@@ -12,8 +12,16 @@ const (
 	INT   = "INT"
 
 	// Operators
-	ASSIGN = "ASSING"
-	PLUS   = "PLUS"
+	ASSIGN     = "="
+	PLUS       = "+"
+	MINUS      = "-"
+	BANG       = "!"
+	ASTERISK   = "*"
+	SLASH      = "/"
+	LT         = "<"
+	GT         = ">"
+	EQUALS     = "=="
+	NOT_EQUALS = "!="
 
 	// Delimiters
 	COMMA     = ","
@@ -25,8 +33,13 @@ const (
 	RBRACE = "}"
 
 	// Keywords
-	FUNC = "FUNC"
-	LET  = "LET"
+	FUNC   = "FUNC"
+	LET    = "LET"
+	TRUE   = "TRUE"
+	FALSE  = "FALSE"
+	IF     = "IF"
+	ELSE   = "ELSE"
+	RETURN = "RETURN"
 )
 
 type Token struct {
@@ -35,8 +48,13 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
-	"fn":  FUNC,
-	"let": LET,
+	"fn":     FUNC,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 func GetKeywordByIdent(ident string) TokenType {

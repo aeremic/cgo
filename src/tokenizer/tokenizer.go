@@ -35,7 +35,13 @@ func (t *Tokenizer) Read() Token {
 	// Read and create current token which will be returned
 	switch t.ch {
 	case '=':
-		token = Token{ASSIGN, string(t.ch)}
+		peekedChar := t.peekChar()
+		if peekedChar == '=' {
+			token = Token{EQUALS, string(t.ch) + string(peekedChar)}
+			t.nextChar()
+		} else {
+			token = Token{ASSIGN, string(t.ch)}
+		}
 	case ';':
 		token = Token{SEMICOLON, string(t.ch)}
 	case '(':
@@ -50,6 +56,24 @@ func (t *Tokenizer) Read() Token {
 		token = Token{COMMA, string(t.ch)}
 	case '+':
 		token = Token{PLUS, string(t.ch)}
+	case '-':
+		token = Token{MINUS, string(t.ch)}
+	case '!':
+		peekedChar := t.peekChar()
+		if peekedChar == '=' {
+			token = Token{NOT_EQUALS, string(t.ch) + string(peekedChar)}
+			t.nextChar()
+		} else {
+			token = Token{BANG, string(t.ch)}
+		}
+	case '/':
+		token = Token{SLASH, string(t.ch)}
+	case '*':
+		token = Token{ASTERISK, string(t.ch)}
+	case '<':
+		token = Token{LT, string(t.ch)}
+	case '>':
+		token = Token{GT, string(t.ch)}
 	case 0:
 		token = Token{EOF, ""}
 	default:
@@ -83,6 +107,14 @@ func (t *Tokenizer) Read() Token {
 func (t *Tokenizer) skipWhitespaces() {
 	for t.ch == ' ' || t.ch == '\t' || t.ch == '\n' || t.ch == '\r' {
 		t.nextChar()
+	}
+}
+
+func (t *Tokenizer) peekChar() byte {
+	if t.readPosition >= len(t.input) {
+		return 0
+	} else {
+		return t.input[t.readPosition]
 	}
 }
 
