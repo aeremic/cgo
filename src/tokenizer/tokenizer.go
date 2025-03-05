@@ -1,5 +1,9 @@
 package tokenizer
 
+import (
+	"github.com/aeremic/cgo/token"
+)
+
 type Tokenizer struct {
 	input        string
 	position     int  // Current position in input
@@ -27,8 +31,8 @@ func (t *Tokenizer) nextChar() {
 }
 
 // Parse current character and move pointer to the next one
-func (t *Tokenizer) Read() Token {
-	var token Token
+func (t *Tokenizer) NextToken() token.Token {
+	var parsedToken token.Token
 
 	t.skipWhitespaces()
 
@@ -37,71 +41,73 @@ func (t *Tokenizer) Read() Token {
 	case '=':
 		peekedChar := t.peekChar()
 		if peekedChar == '=' {
-			token = Token{EQUALS, string(t.ch) + string(peekedChar)}
+			parsedToken = token.Token{Type: token.EQUALS,
+				Literal: string(t.ch) + string(peekedChar)}
 			t.nextChar()
 		} else {
-			token = Token{ASSIGN, string(t.ch)}
+			parsedToken = token.Token{Type: token.ASSIGN, Literal: string(t.ch)}
 		}
 	case ';':
-		token = Token{SEMICOLON, string(t.ch)}
+		parsedToken = token.Token{Type: token.SEMICOLON, Literal: string(t.ch)}
 	case '(':
-		token = Token{LPAREN, string(t.ch)}
+		parsedToken = token.Token{Type: token.LPAREN, Literal: string(t.ch)}
 	case ')':
-		token = Token{RPAREN, string(t.ch)}
+		parsedToken = token.Token{Type: token.RPAREN, Literal: string(t.ch)}
 	case '{':
-		token = Token{LBRACE, string(t.ch)}
+		parsedToken = token.Token{Type: token.LBRACE, Literal: string(t.ch)}
 	case '}':
-		token = Token{RBRACE, string(t.ch)}
+		parsedToken = token.Token{Type: token.RBRACE, Literal: string(t.ch)}
 	case ',':
-		token = Token{COMMA, string(t.ch)}
+		parsedToken = token.Token{Type: token.COMMA, Literal: string(t.ch)}
 	case '+':
-		token = Token{PLUS, string(t.ch)}
+		parsedToken = token.Token{Type: token.PLUS, Literal: string(t.ch)}
 	case '-':
-		token = Token{MINUS, string(t.ch)}
+		parsedToken = token.Token{Type: token.MINUS, Literal: string(t.ch)}
 	case '!':
 		peekedChar := t.peekChar()
 		if peekedChar == '=' {
-			token = Token{NOT_EQUALS, string(t.ch) + string(peekedChar)}
+			parsedToken = token.Token{Type: token.NOT_EQUALS,
+				Literal: string(t.ch) + string(peekedChar)}
 			t.nextChar()
 		} else {
-			token = Token{BANG, string(t.ch)}
+			parsedToken = token.Token{Type: token.BANG, Literal: string(t.ch)}
 		}
 	case '/':
-		token = Token{SLASH, string(t.ch)}
+		parsedToken = token.Token{Type: token.SLASH, Literal: string(t.ch)}
 	case '*':
-		token = Token{ASTERISK, string(t.ch)}
+		parsedToken = token.Token{Type: token.ASTERISK, Literal: string(t.ch)}
 	case '<':
-		token = Token{LT, string(t.ch)}
+		parsedToken = token.Token{Type: token.LT, Literal: string(t.ch)}
 	case '>':
-		token = Token{GT, string(t.ch)}
+		parsedToken = token.Token{Type: token.GT, Literal: string(t.ch)}
 	case 0:
-		token = Token{EOF, ""}
+		parsedToken = token.Token{Type: token.EOF, Literal: ""}
 	default:
 		if isChLetter(t.ch) {
-			token.Literal = t.readIdentifier()
-			token.Type = GetKeywordByIdent(token.Literal)
+			parsedToken.Literal = t.readIdentifier()
+			parsedToken.Type = token.GetKeywordByIdent(parsedToken.Literal)
 
 			// Early return since moving char
 			// since moving char pointer is not needed after readIdentifier call
 			// (method itself moves a pointer)
-			return token
+			return parsedToken
 		} else if isChDigit(t.ch) {
-			token.Literal = t.readNumber()
-			token.Type = INT
+			parsedToken.Literal = t.readNumber()
+			parsedToken.Type = token.INT
 
 			// Early return since moving char
 			// since moving char pointer is not needed after readNumber call
 			// (method itself moves a pointer)
-			return token
+			return parsedToken
 		}
 
-		token = Token{ILLEGAL, string(t.ch)}
+		parsedToken = token.Token{Type: token.ILLEGAL, Literal: string(t.ch)}
 	}
 
 	// Go to next char
 	t.nextChar()
 
-	return token
+	return parsedToken
 }
 
 func (t *Tokenizer) skipWhitespaces() {

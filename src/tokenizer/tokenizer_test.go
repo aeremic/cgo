@@ -2,6 +2,8 @@ package tokenizer
 
 import (
 	"testing"
+
+	"github.com/aeremic/cgo/token"
 )
 
 func TestRead(t *testing.T) {
@@ -11,15 +13,15 @@ func TestRead(t *testing.T) {
 	// 	expectedType    TokenType
 	// 	expectedLiteral string
 	// }{
-	// 	{ASSIGN, "="},
-	// 	{PLUS, "+"},
-	// 	{LPAREN, "("},
-	// 	{RPAREN, ")"},
-	// 	{LBRACE, "{"},
-	// 	{RBRACE, "}"},
-	// 	{COMMA, ","},
-	// 	{SEMICOLON, ";"},
-	// 	{EOF, ""},
+	// 	{token.ASSIGN, "="},
+	// 	{token.PLUS, "+"},
+	// 	{token.LPAREN, "("},
+	// 	{token.RPAREN, ")"},
+	// 	{token.LBRACE, "{"},
+	// 	{token.RBRACE, "}"},
+	// 	{token.COMMA, ","},
+	// 	{token.SEMICOLON, ";"},
+	// 	{token.EOF, ""},
 	// }
 
 	input := `
@@ -46,100 +48,100 @@ func TestRead(t *testing.T) {
 	`
 
 	expectedTokens := []struct {
-		expectedType    TokenType
+		expectedType    token.TokenType
 		expectedLiteral string
 	}{
-		{LET, "let"},
-		{IDENT, "a"},
-		{ASSIGN, "="},
-		{INT, "5"},
-		{SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "a"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
 
-		{LET, "let"},
-		{IDENT, "b"},
-		{ASSIGN, "="},
-		{INT, "4"},
-		{SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "b"},
+		{token.ASSIGN, "="},
+		{token.INT, "4"},
+		{token.SEMICOLON, ";"},
 
-		{LET, "let"},
-		{IDENT, "add"},
-		{ASSIGN, "="},
-		{FUNC, "fn"},
-		{LPAREN, "("},
-		{IDENT, "x"},
-		{COMMA, ","},
-		{IDENT, "y"},
-		{RPAREN, ")"},
-		{LBRACE, "{"},
-		{IDENT, "x"},
-		{PLUS, "+"},
-		{IDENT, "y"},
-		{RBRACE, "}"},
-		{SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "add"},
+		{token.ASSIGN, "="},
+		{token.FUNC, "fn"},
+		{token.LPAREN, "("},
+		{token.IDENT, "x"},
+		{token.COMMA, ","},
+		{token.IDENT, "y"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.IDENT, "x"},
+		{token.PLUS, "+"},
+		{token.IDENT, "y"},
+		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
 
-		{LET, "let"},
-		{IDENT, "result"},
-		{ASSIGN, "="},
-		{IDENT, "add"},
-		{LPAREN, "("},
-		{IDENT, "a"},
-		{COMMA, ","},
-		{IDENT, "b"},
-		{RPAREN, ")"},
-		{SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.IDENT, "a"},
+		{token.COMMA, ","},
+		{token.IDENT, "b"},
+		{token.RPAREN, ")"},
+		{token.SEMICOLON, ";"},
 
-		{BANG, "!"},
-		{MINUS, "-"},
-		{SLASH, "/"},
-		{ASTERISK, "*"},
-		{INT, "5"},
-		{SEMICOLON, ";"},
-		{INT, "5"},
-		{LT, "<"},
-		{INT, "10"},
-		{GT, ">"},
-		{INT, "5"},
+		{token.BANG, "!"},
+		{token.MINUS, "-"},
+		{token.SLASH, "/"},
+		{token.ASTERISK, "*"},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.INT, "5"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.GT, ">"},
+		{token.INT, "5"},
 
-		{IF, "if"},
-		{LPAREN, "("},
-		{INT, "5"},
-		{LT, "<"},
-		{INT, "10"},
-		{RPAREN, ")"},
-		{LBRACE, "{"},
-		{RETURN, "return"},
-		{TRUE, "true"},
-		{SEMICOLON, ";"},
-		{RBRACE, "}"},
-		{ELSE, "else"},
-		{LBRACE, "{"},
-		{RETURN, "return"},
-		{FALSE, "false"},
-		{SEMICOLON, ";"},
-		{RBRACE, "}"},
+		{token.IF, "if"},
+		{token.LPAREN, "("},
+		{token.INT, "5"},
+		{token.LT, "<"},
+		{token.INT, "10"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.TRUE, "true"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.ELSE, "else"},
+		{token.LBRACE, "{"},
+		{token.RETURN, "return"},
+		{token.FALSE, "false"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
 
-		{INT, "10"},
-		{EQUALS, "=="},
-		{INT, "10"},
-		{SEMICOLON, ";"},
-		{INT, "10"},
-		{NOT_EQUALS, "!="},
-		{INT, "9"},
-		{SEMICOLON, ";"},
+		{token.INT, "10"},
+		{token.EQUALS, "=="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+		{token.INT, "10"},
+		{token.NOT_EQUALS, "!="},
+		{token.INT, "9"},
+		{token.SEMICOLON, ";"},
 	}
 
 	tokenizer := New(input)
 	for i, expectedToken := range expectedTokens {
-		token := tokenizer.Read()
+		parsedToken := tokenizer.NextToken()
 
-		if token.Type != expectedToken.expectedType {
+		if parsedToken.Type != expectedToken.expectedType {
 			t.Fatalf("expectedTokens[%d] - Token type is wrong. Expected %q, received %q",
-				i, expectedToken.expectedType, token.Type)
+				i, expectedToken.expectedType, parsedToken.Type)
 		}
 
-		if token.Literal != expectedToken.expectedLiteral {
+		if parsedToken.Literal != expectedToken.expectedLiteral {
 			t.Fatalf("expectedTokens[%d] - Token literal is wrong. Expected %q, received %q",
-				i, expectedToken.expectedLiteral, token.Literal)
+				i, expectedToken.expectedLiteral, parsedToken.Literal)
 		}
 	}
 }

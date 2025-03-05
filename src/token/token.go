@@ -1,4 +1,4 @@
-package tokenizer
+package token
 
 type TokenType string
 
