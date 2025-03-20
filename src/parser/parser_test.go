@@ -27,6 +27,8 @@ func TestLetStatement(t *testing.T) {
 			len(program.Statements))
 	}
 
+	checkParseErrors(t, parser)
+
 	expectedLetIdentifiers := []struct {
 		expectedIdentifier string
 	}{
@@ -41,6 +43,20 @@ func TestLetStatement(t *testing.T) {
 			return
 		}
 	}
+}
+
+func checkParseErrors(t *testing.T, parser *Parser) {
+	errors := parser.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("Parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("Parser error: %s", msg)
+	}
+
+	t.FailNow()
 }
 
 func checkLetStatement(t *testing.T, statement ast.Statement, name string) bool {
