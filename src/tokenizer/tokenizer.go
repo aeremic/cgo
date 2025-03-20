@@ -11,12 +11,15 @@ type Tokenizer struct {
 	ch           byte // Current position character
 }
 
+// Constructor
 func New(input string) *Tokenizer {
 	t := &Tokenizer{input: input}
 	t.nextChar()
 
 	return t
 }
+
+// Methods
 
 // Return next character and advance input position
 func (t *Tokenizer) nextChar() {
