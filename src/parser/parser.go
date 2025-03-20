@@ -32,5 +32,63 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) ParseProgram() *ast.ProgramRoot {
-	return nil
+	program := &ast.ProgramRoot{}
+	program.Statements = []ast.Statement{}
+
+	for p.currentToken.Type != token.EOF {
+		statement := p.parseStatement()
+		if statement != nil {
+			program.Statements = append(program.Statements, statement)
+		}
+
+		p.nextToken()
+	}
+
+	return program
+}
+
+func (p *Parser) parseStatement() ast.Statement {
+	switch p.currentToken.Type {
+	case token.LET:
+		return p.parseLetStatement()
+	default:
+		return nil
+	}
+}
+
+func (p *Parser) parseLetStatement() *ast.LetStatement {
+	statement := &ast.LetStatement{Token: p.currentToken}
+
+	if !p.checkPeekTokenAndMove(token.IDENT) {
+		return nil
+	}
+
+	statement.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+
+	if !p.checkPeekTokenAndMove(token.ASSIGN) {
+		return nil
+	}
+
+	for !p.checkCurrentTokenType(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return statement
+}
+
+func (p *Parser) checkCurrentTokenType(t token.TokenType) bool {
+	return p.currentToken.Type == t
+}
+
+func (p *Parser) checkPeekTokenType(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+
+func (p *Parser) checkPeekTokenAndMove(t token.TokenType) bool {
+	if p.checkPeekTokenType(t) {
+		p.nextToken()
+		return true
+	}
+
+	return false
 }

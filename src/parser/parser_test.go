@@ -27,7 +27,7 @@ func TestLetStatement(t *testing.T) {
 			len(program.Statements))
 	}
 
-	tests := []struct {
+	expectedLetIdentifiers := []struct {
 		expectedIdentifier string
 	}{
 		{"x"},
@@ -35,7 +35,7 @@ func TestLetStatement(t *testing.T) {
 		{"foobar"},
 	}
 
-	for i, test := range tests {
+	for i, test := range expectedLetIdentifiers {
 		statement := program.Statements[i]
 		if !checkLetStatement(t, statement, test.expectedIdentifier) {
 			return
