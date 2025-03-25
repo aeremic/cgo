@@ -14,8 +14,16 @@ func TestLetStatement(t *testing.T) {
 	let foobar = 12345;
 	`
 
+	// input := `
+	// let x 5;
+	// let = 10;
+	// let 12345;
+	// `
+
 	tokenizer := tokenizer.New(input)
 	parser := New(tokenizer)
+
+	checkParseErrors(t, parser)
 
 	program := parser.ParseProgram()
 	if program == nil {
@@ -26,8 +34,6 @@ func TestLetStatement(t *testing.T) {
 		t.Fatalf("program.Statements doesn't contain 3 statements. Got %d",
 			len(program.Statements))
 	}
-
-	checkParseErrors(t, parser)
 
 	expectedLetIdentifiers := []struct {
 		expectedIdentifier string
@@ -85,4 +91,39 @@ func checkLetStatement(t *testing.T, statement ast.Statement, name string) bool 
 	}
 
 	return true
+}
+
+func TestReturnStatement(t *testing.T) {
+	input := `
+	return 5;
+	return 10;
+	return 101;`
+
+	tokenizer := tokenizer.New(input)
+	parser := New(tokenizer)
+
+	checkParseErrors(t, parser)
+
+	program := parser.ParseProgram()
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("program.Statements doesn't contain 3 statements. Got %d",
+			len(program.Statements))
+	}
+
+	for _, statement := range program.Statements {
+		returnStatement, ok := statement.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("Statement is not ReturnStatement type. Got %T", statement)
+			continue
+		}
+
+		if returnStatement.TokenLiteral() != "return" {
+			t.Errorf("Return statemen token literal is not 'return'. Got %q",
+				returnStatement.TokenLiteral())
+		}
+	}
 }
