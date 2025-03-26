@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/aeremic/cgo/ast"
 	"github.com/aeremic/cgo/token"
@@ -45,6 +46,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
 	// p.infixParseFns = make(map[token.TokenType]infixParseFn)
 
@@ -172,6 +174,22 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	literal := &ast.IntegerLiteral{Token: p.currentToken}
+
+	value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
+	if err != nil {
+		message := fmt.Sprintf("Could not parse %q as integer.", p.currentToken.Literal)
+		p.errors = append(p.errors, message)
+
+		return nil
+	}
+
+	literal.Value = value
+
+	return literal
 }
 
 func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {

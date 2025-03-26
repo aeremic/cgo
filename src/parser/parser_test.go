@@ -163,3 +163,39 @@ func TestIdentifierExpression(t *testing.T) {
 		t.Fatalf("Token literal invalid. Got %s", identifier.TokenLiteral())
 	}
 }
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	tokenizer := tokenizer.New(input)
+	parser := New(tokenizer)
+
+	checkParseErrors(t, parser)
+
+	program := parser.ParseProgram()
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Incorrect number of statements. Got %d", len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statement[0] is not expression statement. Got %T", program.Statements[0])
+	}
+
+	literal, ok := statement.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("Expression is not IntegerLiteral type. Got %T", statement.Expression)
+	}
+
+	if literal.Value != 5 {
+		t.Errorf("literal.Value incorrect. Got %d", literal.Value)
+	}
+
+	if literal.TokenLiteral() != "5" {
+		t.Errorf("literal.TokenLiteral incorrect. Got %s", literal.TokenLiteral())
+	}
+}
