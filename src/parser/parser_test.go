@@ -127,3 +127,39 @@ func TestReturnStatement(t *testing.T) {
 		}
 	}
 }
+
+func TestIdentifierExpression(t *testing.T) {
+	input := "foobar;"
+
+	tokenizer := tokenizer.New(input)
+	parser := New(tokenizer)
+
+	checkParseErrors(t, parser)
+
+	program := parser.ParseProgram()
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Incorrect number of statements. Got %d", len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statement[0] is not expression statement. Got %T", program.Statements[0])
+	}
+
+	identifier, ok := statement.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("Expression is not identifier. Got %T", statement.Expression)
+	}
+
+	if identifier.Value != "foobar" {
+		t.Fatalf("Identifier invalid. Got %s", identifier.Value)
+	}
+
+	if identifier.TokenLiteral() != "foobar" {
+		t.Fatalf("Token literal invalid. Got %s", identifier.TokenLiteral())
+	}
+}

@@ -8,11 +8,30 @@ import (
 	"github.com/aeremic/cgo/tokenizer"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER // < or >
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myFunction(X)
+)
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression // Input represents left side of op.
+)
+
 type Parser struct {
-	tokenizer    *tokenizer.Tokenizer // Pointer to the lexer
-	currentToken token.Token
-	peekToken    token.Token
-	errors       []string
+	tokenizer      *tokenizer.Tokenizer // Pointer to the lexer
+	currentToken   token.Token
+	peekToken      token.Token
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
+
+	errors []string
 }
 
 // Constructor
@@ -23,6 +42,11 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	// both current token and next token
 	p.nextToken()
 	p.nextToken()
+
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
+
+	// p.infixParseFns = make(map[token.TokenType]infixParseFn)
 
 	return p
 }
@@ -66,7 +90,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -104,6 +128,18 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	return statement
 }
 
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	statement := &ast.ExpressionStatement{Token: p.currentToken}
+
+	statement.Expression = p.parseExpression(LOWEST)
+
+	if p.checkPeekTokenType(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return statement
+}
+
 func (p *Parser) checkCurrentTokenType(t token.TokenType) bool {
 	return p.currentToken.Type == t
 }
@@ -121,4 +157,27 @@ func (p *Parser) peekAndMove(t token.TokenType) bool {
 	p.LogPeekError(t)
 
 	return false
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.currentToken.Type]
+	if prefix == nil {
+		return nil
+	}
+
+	leftExpression := prefix()
+
+	return leftExpression
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+}
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
