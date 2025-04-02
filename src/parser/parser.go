@@ -35,14 +35,6 @@ type Parser struct {
 	errors []string
 }
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
-	p.prefixParseFns[tokenType] = fn
-}
-
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
-	p.infixParseFns[tokenType] = fn
-}
-
 // Constructor
 func New(t *tokenizer.Tokenizer) *Parser {
 	p := &Parser{tokenizer: t, errors: []string{}}
@@ -72,11 +64,6 @@ func (p *Parser) Errors() []string {
 func (p *Parser) LogPeekError(t token.TokenType) {
 	msg := fmt.Sprintf("Expected next token %s. Got %s", t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) nextToken() {
-	p.currentToken = p.peekToken
-	p.peekToken = p.tokenizer.NextToken()
 }
 
 func (p *Parser) ParseProgram() *ast.ProgramRoot {
@@ -195,28 +182,4 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression.Right = p.parseExpression(PREFIX)
 
 	return expression
-}
-
-func (p *Parser) checkCurrentTokenType(t token.TokenType) bool {
-	return p.currentToken.Type == t
-}
-
-func (p *Parser) checkPeekTokenType(t token.TokenType) bool {
-	return p.peekToken.Type == t
-}
-
-func (p *Parser) peekAndMove(t token.TokenType) bool {
-	if p.checkPeekTokenType(t) {
-		p.nextToken()
-		return true
-	}
-
-	p.LogPeekError(t)
-
-	return false
-}
-
-func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("No prefix parse function found for type %s", t)
-	p.errors = append(p.errors, msg)
 }
