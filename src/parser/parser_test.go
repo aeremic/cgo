@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aeremic/cgo/ast"
@@ -197,5 +198,72 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 	if literal.TokenLiteral() != "5" {
 		t.Errorf("literal.TokenLiteral incorrect. Got %s", literal.TokenLiteral())
+	}
+}
+
+func testIntegerLiteralExpression(t *testing.T, il ast.Expression, value int64) bool {
+	integerLiteral, ok := il.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("Given integer literal is not type of IntegerLiteral. Got %T",
+			il)
+		return false
+	}
+
+	if integerLiteral.Value != value {
+		t.Errorf("Wrong value given. Got %d, required is %d", integerLiteral.Value, value)
+		return false
+	}
+
+	if integerLiteral.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("integerLiteral.TokenLiteral is not %d. Got %s",
+			value, integerLiteral.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func TestParsingPrefixExpressions(t *testing.T) {
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!5", "!", 5},
+		{"-15", "-", 15},
+	}
+
+	for _, test := range prefixTests {
+		tokenizer := tokenizer.New(test.input)
+		parser := New(tokenizer)
+
+		program := parser.ParseProgram()
+		checkParseErrors(t, parser)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain required statements. Got %d",
+				len(program.Statements))
+		}
+
+		statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not *ast.ExpressionStatement. Got %T",
+				program.Statements[0])
+		}
+
+		expression, ok := statement.Expression.(*ast.PrefixExpression)
+		if !ok {
+			t.Fatalf("Expression is not *ast.PrefixExpression. Got %T",
+				statement.Expression)
+		}
+
+		if expression.Operator != test.operator {
+			t.Fatalf("Invalid operator. Got %s and required is %s",
+				expression.Operator, test.operator)
+		}
+
+		if !testIntegerLiteralExpression(t, expression.Right, test.integerValue) {
+			return
+		}
 	}
 }

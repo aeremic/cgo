@@ -35,6 +35,14 @@ type Parser struct {
 	errors []string
 }
 
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
+}
+
 // Constructor
 func New(t *tokenizer.Tokenizer) *Parser {
 	p := &Parser{tokenizer: t, errors: []string{}}
@@ -47,6 +55,8 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
 	// p.infixParseFns = make(map[token.TokenType]infixParseFn)
 
@@ -142,28 +152,10 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return statement
 }
 
-func (p *Parser) checkCurrentTokenType(t token.TokenType) bool {
-	return p.currentToken.Type == t
-}
-
-func (p *Parser) checkPeekTokenType(t token.TokenType) bool {
-	return p.peekToken.Type == t
-}
-
-func (p *Parser) peekAndMove(t token.TokenType) bool {
-	if p.checkPeekTokenType(t) {
-		p.nextToken()
-		return true
-	}
-
-	p.LogPeekError(t)
-
-	return false
-}
-
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParseFns[p.currentToken.Type]
 	if prefix == nil {
+		p.noPrefixParseFnError(p.currentToken.Type)
 		return nil
 	}
 
@@ -192,10 +184,39 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	return literal
 }
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
-	p.prefixParseFns[tokenType] = fn
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		Token:    p.currentToken,
+		Operator: p.currentToken.Literal,
+	}
+
+	p.nextToken()
+
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
 }
 
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
-	p.infixParseFns[tokenType] = fn
+func (p *Parser) checkCurrentTokenType(t token.TokenType) bool {
+	return p.currentToken.Type == t
+}
+
+func (p *Parser) checkPeekTokenType(t token.TokenType) bool {
+	return p.peekToken.Type == t
+}
+
+func (p *Parser) peekAndMove(t token.TokenType) bool {
+	if p.checkPeekTokenType(t) {
+		p.nextToken()
+		return true
+	}
+
+	p.LogPeekError(t)
+
+	return false
+}
+
+func (p *Parser) noPrefixParseFnError(t token.TokenType) {
+	msg := fmt.Sprintf("No prefix parse function found for type %s", t)
+	p.errors = append(p.errors, msg)
 }
