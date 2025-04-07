@@ -9,22 +9,6 @@ import (
 	"github.com/aeremic/cgo/tokenizer"
 )
 
-const (
-	_ int = iota
-	LOWEST
-	EQUALS      // ==
-	LESSGREATER // < or >
-	SUM         // +
-	PRODUCT     // *
-	PREFIX      // -X or !X
-	CALL        // myFunction(X)
-)
-
-type (
-	prefixParseFn func() ast.Expression
-	infixParseFn  func(ast.Expression) ast.Expression // Input represents left side of op.
-)
-
 type Parser struct {
 	tokenizer      *tokenizer.Tokenizer // Pointer to the lexer
 	currentToken   token.Token
@@ -50,7 +34,15 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
-	// p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.registerInfix(token.EQUALS, p.parseInfixExpression)
+	p.registerInfix(token.NOT_EQUALS, p.parseInfixExpression)
+	p.registerInfix(token.LT, p.parseInfixExpression)
+	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.PLUS, p.parseInfixExpression)
+	p.registerInfix(token.MINUS, p.parseInfixExpression)
+	p.registerInfix(token.SLASH, p.parseInfixExpression)
+	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 
 	return p
 }
@@ -148,6 +140,17 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	leftExpression := prefix()
 
+	for !p.checkPeekTokenType(token.SEMICOLON) && precedence < p.peekTokenPrecedence() {
+		infix := p.infixParseFns[p.peekToken.Type]
+		if infix == nil {
+			return leftExpression
+		}
+
+		p.nextToken()
+
+		leftExpression = infix(leftExpression)
+	}
+
 	return leftExpression
 }
 
@@ -180,6 +183,20 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	p.nextToken()
 
 	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	expression := &ast.InfixExpression{
+		Token:    p.currentToken,
+		Operator: p.currentToken.Literal,
+		Left:     left,
+	}
+
+	precedence := p.currentTokenPrecedence()
+	p.nextToken()
+	expression.Right = p.parseExpression(precedence)
 
 	return expression
 }

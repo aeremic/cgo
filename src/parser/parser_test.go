@@ -267,3 +267,87 @@ func TestParsingPrefixExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestParsingInfixExpressions(t *testing.T) {
+	infixTests := []struct {
+		input      string
+		leftValue  int64
+		operator   string
+		rightValue int64
+	}{
+		{"5 + 5", 5, "+", 5},
+		{"5 - 5", 5, "-", 5},
+		{"5 * 5", 5, "*", 5},
+		{"5 / 5", 5, "/", 5},
+		{"5 > 5", 5, ">", 5},
+		{"5 < 5", 5, "<", 5},
+		{"5 == 5", 5, "==", 5},
+		{"5 != 5", 5, "!=", 5},
+	}
+
+	for _, test := range infixTests {
+		tokenizer := tokenizer.New(test.input)
+		parser := New(tokenizer)
+
+		program := parser.ParseProgram()
+		checkParseErrors(t, parser)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain required statements. Got %d",
+				len(program.Statements))
+		}
+
+		statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not *ast.ExpressionStatement. Got %T",
+				program.Statements[0])
+		}
+
+		expression, ok := statement.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf("statement.Expression is not *ast.InfixExpression. Got %T",
+				statement.Expression)
+		}
+
+		if !testIntegerLiteralExpression(t, expression.Left, test.leftValue) {
+			return
+		}
+
+		if expression.Operator != test.operator {
+			t.Fatalf("Operator not valid. Got %s instead of %s",
+				expression.Operator, test.operator)
+		}
+
+		if !testIntegerLiteralExpression(t, expression.Right, test.rightValue) {
+			return
+		}
+	}
+}
+
+func TestOperatorPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"-a * b", "((-a) * b)"},
+		{"!-a", "(!(-a))"},
+		{"a + b / c", "(a + (b / c))"},
+		{"a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"},
+		{"5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"},
+		{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+	}
+
+	for _, test := range tests {
+		tokenizer := tokenizer.New(test.input)
+		parser := New(tokenizer)
+
+		program := parser.ParseProgram()
+		checkParseErrors(t, parser)
+
+		output := program.String()
+		if output != test.expected {
+			t.Errorf("Got wrong actual. Got %q; Expected %q",
+				output, test.expected)
+		}
+	}
+}
