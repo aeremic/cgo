@@ -11,7 +11,7 @@ type Tokenizer struct {
 	ch           byte // Current position character
 }
 
-// Constructor
+// New Constructor
 func New(input string) *Tokenizer {
 	t := &Tokenizer{input: input}
 	t.nextChar()
@@ -33,7 +33,7 @@ func (t *Tokenizer) nextChar() {
 	t.readPosition += 1
 }
 
-// Parse current character and move pointer to the next one
+// NextToken Parse current character and move pointer to the next one
 func (t *Tokenizer) NextToken() token.Token {
 	var parsedToken token.Token
 

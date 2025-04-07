@@ -19,7 +19,7 @@ type Parser struct {
 	errors []string
 }
 
-// Constructor
+// New Constructor
 func New(t *tokenizer.Tokenizer) *Parser {
 	p := &Parser{tokenizer: t, errors: []string{}}
 

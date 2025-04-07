@@ -8,6 +8,15 @@ import (
 	"github.com/aeremic/cgo/tokenizer"
 )
 
+func setUpTest(t *testing.T, input string) *ast.ProgramRoot {
+	inputTokenizer := tokenizer.New(input)
+	parser := New(inputTokenizer)
+
+	checkParseErrors(t, parser)
+
+	return parser.ParseProgram()
+}
+
 func TestLetStatement(t *testing.T) {
 	input := `
 	let x = 5;
@@ -21,12 +30,8 @@ func TestLetStatement(t *testing.T) {
 	// let 12345;
 	// `
 
-	tokenizer := tokenizer.New(input)
-	parser := New(tokenizer)
+	program := setUpTest(t, input)
 
-	checkParseErrors(t, parser)
-
-	program := parser.ParseProgram()
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
 	}
@@ -100,12 +105,8 @@ func TestReturnStatement(t *testing.T) {
 	return 10;
 	return 101;`
 
-	tokenizer := tokenizer.New(input)
-	parser := New(tokenizer)
+	program := setUpTest(t, input)
 
-	checkParseErrors(t, parser)
-
-	program := parser.ParseProgram()
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
 	}
@@ -132,12 +133,8 @@ func TestReturnStatement(t *testing.T) {
 func TestIdentifierExpression(t *testing.T) {
 	input := "foobar;"
 
-	tokenizer := tokenizer.New(input)
-	parser := New(tokenizer)
+	program := setUpTest(t, input)
 
-	checkParseErrors(t, parser)
-
-	program := parser.ParseProgram()
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
 	}
@@ -168,12 +165,8 @@ func TestIdentifierExpression(t *testing.T) {
 func TestIntegerLiteralExpression(t *testing.T) {
 	input := "5;"
 
-	tokenizer := tokenizer.New(input)
-	parser := New(tokenizer)
+	program := setUpTest(t, input)
 
-	checkParseErrors(t, parser)
-
-	program := parser.ParseProgram()
 	if program == nil {
 		t.Fatalf("ParseProgram() returned nil")
 	}
@@ -234,11 +227,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	}
 
 	for _, test := range prefixTests {
-		tokenizer := tokenizer.New(test.input)
-		parser := New(tokenizer)
-
-		program := parser.ParseProgram()
-		checkParseErrors(t, parser)
+		program := setUpTest(t, test.input)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf("program.Statements does not contain required statements. Got %d",
@@ -286,11 +275,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}
 
 	for _, test := range infixTests {
-		tokenizer := tokenizer.New(test.input)
-		parser := New(tokenizer)
-
-		program := parser.ParseProgram()
-		checkParseErrors(t, parser)
+		program := setUpTest(t, test.input)
 
 		if len(program.Statements) != 1 {
 			t.Fatalf("program.Statements does not contain required statements. Got %d",
@@ -338,11 +323,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		tokenizer := tokenizer.New(test.input)
-		parser := New(tokenizer)
-
-		program := parser.ParseProgram()
-		checkParseErrors(t, parser)
+		program := setUpTest(t, test.input)
 
 		output := program.String()
 		if output != test.expected {
