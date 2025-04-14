@@ -1,6 +1,6 @@
 package token
 
-type TokenType string
+type Type string
 
 const (
 	// Special types
@@ -43,11 +43,11 @@ const (
 )
 
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 }
 
-var keywords = map[string]TokenType{
+var keywords = map[string]Type{
 	"fn":     FUNC,
 	"let":    LET,
 	"true":   TRUE,
@@ -57,7 +57,7 @@ var keywords = map[string]TokenType{
 	"return": RETURN,
 }
 
-func GetKeywordByIdent(ident string) TokenType {
+func GetKeywordByIdent(ident string) Type {
 	if tokenType, exists := keywords[ident]; exists {
 		return tokenType
 	}

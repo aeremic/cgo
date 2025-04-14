@@ -48,7 +48,7 @@ func TestRead(t *testing.T) {
 	`
 
 	expectedTokens := []struct {
-		expectedType    token.TokenType
+		expectedType    token.Type
 		expectedLiteral string
 	}{
 		{token.LET, "let"},

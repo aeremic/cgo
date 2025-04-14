@@ -15,7 +15,10 @@ func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
 	for {
-		fmt.Fprintf(out, PROMPT)
+		_, err := fmt.Fprintf(out, PROMPT)
+		if err != nil {
+			return
+		}
 		scanned := scanner.Scan()
 		if !scanned {
 			return
@@ -25,7 +28,10 @@ func Start(in io.Reader, out io.Writer) {
 
 		t := tokenizer.New(line)
 		for parsedToken := t.NextToken(); parsedToken.Type != token.EOF; parsedToken = t.NextToken() {
-			fmt.Fprintf(out, "%+v\n", parsedToken)
+			_, err := fmt.Fprintf(out, "%+v\n", parsedToken)
+			if err != nil {
+				return
+			}
 		}
 	}
 }

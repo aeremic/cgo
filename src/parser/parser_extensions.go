@@ -18,7 +18,7 @@ const (
 	CALL        // myFunction(X)
 )
 
-var precedences = map[token.TokenType]int{
+var precedences = map[token.Type]int{
 	token.EQUALS:     EQUALS,
 	token.NOT_EQUALS: EQUALS,
 	token.LT:         LESSGREATER,
@@ -34,11 +34,11 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression // Input represents left side of op.
 )
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+func (p *Parser) registerPrefix(tokenType token.Type, fn prefixParseFn) {
 	p.prefixParseFns[tokenType] = fn
 }
 
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+func (p *Parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
@@ -47,15 +47,15 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.tokenizer.NextToken()
 }
 
-func (p *Parser) checkCurrentTokenType(t token.TokenType) bool {
+func (p *Parser) checkCurrentTokenType(t token.Type) bool {
 	return p.currentToken.Type == t
 }
 
-func (p *Parser) checkPeekTokenType(t token.TokenType) bool {
+func (p *Parser) checkPeekTokenType(t token.Type) bool {
 	return p.peekToken.Type == t
 }
 
-func (p *Parser) peekAndMove(t token.TokenType) bool {
+func (p *Parser) peekAndMove(t token.Type) bool {
 	if p.checkPeekTokenType(t) {
 		p.nextToken()
 		return true
@@ -66,7 +66,7 @@ func (p *Parser) peekAndMove(t token.TokenType) bool {
 	return false
 }
 
-func (p *Parser) noPrefixParseFnError(t token.TokenType) {
+func (p *Parser) noPrefixParseFnError(t token.Type) {
 	msg := fmt.Sprintf("No prefix parse function found for type %s", t)
 	p.errors = append(p.errors, msg)
 }

@@ -13,8 +13,8 @@ type Parser struct {
 	tokenizer      *tokenizer.Tokenizer // Pointer to the lexer
 	currentToken   token.Token
 	peekToken      token.Token
-	prefixParseFns map[token.TokenType]prefixParseFn
-	infixParseFns  map[token.TokenType]infixParseFn
+	prefixParseFns map[token.Type]prefixParseFn
+	infixParseFns  map[token.Type]infixParseFn
 
 	errors []string
 }
@@ -28,7 +28,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.nextToken()
 	p.nextToken()
 
-	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.prefixParseFns = make(map[token.Type]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
@@ -36,7 +36,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 
-	p.infixParseFns = make(map[token.TokenType]infixParseFn)
+	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.EQUALS, p.parseInfixExpression)
 	p.registerInfix(token.NOT_EQUALS, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
@@ -55,7 +55,7 @@ func (p *Parser) Errors() []string {
 	return p.errors
 }
 
-func (p *Parser) LogPeekError(t token.TokenType) {
+func (p *Parser) LogPeekError(t token.Type) {
 	msg := fmt.Sprintf("Expected next token %s. Got %s", t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
