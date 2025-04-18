@@ -36,6 +36,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfExpression)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.EQUALS, p.parseInfixExpression)
@@ -157,6 +158,24 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return leftExpression
 }
 
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{Token: p.currentToken}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.checkCurrentTokenType(token.RBRACE) && !p.checkCurrentTokenType(token.EOF) {
+		statement := p.parseStatement()
+		if statement != nil {
+			block.Statements = append(block.Statements, statement)
+		}
+
+		p.nextToken()
+	}
+
+	return block
+}
+
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
@@ -223,6 +242,33 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	}
 
 	p.nextToken()
+
+	return expression
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expression := &ast.IfExpression{
+		Token: p.currentToken,
+	}
+
+	if !p.checkPeekTokenType(token.LPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+	expression.Condition = p.parseExpression(LOWEST)
+
+	if !p.checkCurrentTokenType(token.RPAREN) {
+		return nil
+	}
+
+	if !p.checkPeekTokenType(token.LBRACE) {
+		return nil
+	}
+
+	p.nextToken()
+
+	expression.Consequence = p.parseBlockStatement()
 
 	return expression
 }

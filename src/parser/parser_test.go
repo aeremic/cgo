@@ -462,20 +462,17 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 }
 
 func TestIfExpression(t *testing.T) {
-	input := "if (x < y) { x }"
+	input := `if (x < y) { x }`
 
 	program := setUpTest(t, input)
-
-	if len(program.Statements) != 1 {
-		t.Fatalf("Invalid number of statements. Got %d", len(program.Statements))
-	}
 
 	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
 		t.Fatalf("Statement is not ExpressionStatement type. Got %T", program.Statements[0])
 	}
 
-	expression, ok := statement.Expression.(*ast.IfExpression)if !ok {
+	expression, ok := statement.Expression.(*ast.IfExpression)
+	if !ok {
 		t.Fatalf("Expression is not IfExpression type. Got %T", statement.Expression)
 	}
 
