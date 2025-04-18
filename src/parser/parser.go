@@ -37,6 +37,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.FUNC, p.parseFunctionLiteral)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.EQUALS, p.parseInfixExpression)
@@ -267,7 +268,6 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	}
 
 	p.nextToken()
-
 	expression.Consequence = p.parseBlockStatement()
 
 	if p.checkPeekTokenType(token.ELSE) {
@@ -278,9 +278,61 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		}
 
 		p.nextToken()
-
 		expression.Alternative = p.parseBlockStatement()
 	}
 
 	return expression
+}
+
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	literal := &ast.FunctionLiteral{
+		Token: p.currentToken,
+	}
+
+	if !p.peekAndMove(token.LPAREN) {
+		return nil
+	}
+
+	literal.Parameters = p.parseFunctionParameters()
+
+	if !p.peekAndMove(token.LBRACE) {
+		return nil
+	}
+
+	literal.Body = p.parseBlockStatement()
+
+	return literal
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	identifiers := []*ast.Identifier{}
+
+	if p.checkPeekTokenType(token.RPAREN) {
+		p.nextToken()
+
+		return identifiers
+	}
+
+	p.nextToken()
+
+	identifiers = append(identifiers, &ast.Identifier{
+		Token: p.currentToken,
+		Value: p.currentToken.Literal,
+	})
+
+	for p.checkPeekTokenType(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+
+		identifiers = append(identifiers, &ast.Identifier{
+			Token: p.currentToken,
+			Value: p.currentToken.Literal,
+		})
+	}
+
+	if !p.peekAndMove(token.RPAREN) {
+		return nil
+	}
+
+	return identifiers
 }
