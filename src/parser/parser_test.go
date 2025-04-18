@@ -513,7 +513,8 @@ func TestIfElseExpression(t *testing.T) {
 		t.Fatalf("Statement is not ExpressionStatement type. Got %T", program.Statements[0])
 	}
 
-	expression, ok := statement.Expression.(*ast.IfExpression)if !ok {
+	expression, ok := statement.Expression.(*ast.IfExpression)
+	if !ok {
 		t.Fatalf("Expression is not IfExpression type. Got %T", statement.Expression)
 	}
 
