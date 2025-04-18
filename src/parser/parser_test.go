@@ -448,6 +448,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{"-(5 + 5)", "(-(5 + 5))"},
 		{"!true == true", "((!true) == true)"},
 		{"!(true == true)", "(!(true == true))"},
+		{"a + add(b * c) + d", "((a + add((b * c))) + d)"},
+		{"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+			"add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
+		{"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"},
 	}
 
 	for _, test := range tests {
@@ -622,6 +626,97 @@ func TestFunctionParameterParsing(t *testing.T) {
 
 		for i, expectedParam := range test.expectedParams {
 			testLiteralExpression(t, function.Parameters[i], expectedParam)
+		}
+	}
+}
+
+func TestCallExpressionParsing(t *testing.T) {
+	input := "add(1, 2 * 3, 4 + 5);"
+
+	program := setUpTest(t, input)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Invalid number of statements. Got %d instead of %d",
+			len(program.Statements), 1)
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] invalid type. Got %T",
+			program.Statements[0])
+	}
+
+	expression, ok := statement.Expression.(*ast.CallExpression)
+	if !ok {
+		t.Fatalf("statement.Expression invalid type. Got %T",
+			statement.Expression)
+	}
+
+	if !testIdentifier(t, expression.Function, "add") {
+		return
+	}
+
+	if len(expression.Arguments) != 3 {
+		t.Errorf("Invalid number of args in the call. Got %d instead of %d",
+			len(expression.Arguments), 3)
+	}
+
+	// for _, arg := range expression.Arguments {
+	// 	t.Errorf("%T %s", arg, arg.String())
+	// }
+
+	testLiteralExpression(t, expression.Arguments[0], 1)
+	testInfixExpression(t, expression.Arguments[1], 2, "*", 3)
+	testInfixExpression(t, expression.Arguments[2], 4, "+", 5)
+}
+
+func TestCallExpressionParametersParsing(t *testing.T) {
+	tests := []struct {
+		input              string
+		expectedIdentifier string
+		expectedArguments  []string
+	}{
+		{
+			input:              "add();",
+			expectedIdentifier: "add",
+			expectedArguments:  []string{},
+		},
+		{
+			input:              "add(1);",
+			expectedIdentifier: "add",
+			expectedArguments:  []string{"1"},
+		},
+		{
+			input:              "add(1, 2 * 3, 4 + 5);",
+			expectedIdentifier: "add",
+			expectedArguments:  []string{"1", "(2 * 3)", "(4 + 5)"},
+		},
+	}
+
+	for _, test := range tests {
+		program := setUpTest(t, test.input)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		exp, ok := stmt.Expression.(*ast.CallExpression)
+		if !ok {
+			t.Fatalf("stmt.Expression is not ast.CallExpression. got=%T",
+				stmt.Expression)
+		}
+
+		if !testIdentifier(t, exp.Function, test.expectedIdentifier) {
+			return
+		}
+
+		if len(exp.Arguments) != len(test.expectedArguments) {
+			t.Fatalf("Wrong number of arguments. want=%d, got=%d",
+				len(test.expectedArguments), len(exp.Arguments))
+		}
+
+		for i, arg := range test.expectedArguments {
+			if exp.Arguments[i].String() != arg {
+				t.Errorf("Argument %d wrong. want=%q, got=%q",
+					i, arg, exp.Arguments[i].String())
+			}
 		}
 	}
 }

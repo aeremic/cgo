@@ -48,6 +48,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	return p
 }
@@ -222,6 +223,42 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	expression := &ast.CallExpression{
+		Token:    p.currentToken,
+		Function: function,
+	}
+
+	expression.Arguments = p.parseCallArguments()
+
+	return expression
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.checkPeekTokenType(token.RPAREN) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+
+	args = append(args, p.parseExpression(LOWEST))
+	for p.checkPeekTokenType(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.peekAndMove(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
 
 func (p *Parser) parseBoolean() ast.Expression {
