@@ -44,6 +44,35 @@ func testIntegerLiteralExpression(t *testing.T, il ast.Expression, value int64) 
 	return true
 }
 
+func testLetStatement(t *testing.T, statement ast.Statement, name string) bool {
+	if statement.TokenLiteral() != "let" {
+		t.Errorf("Invalid token literal. Got %s instead of let",
+			statement.TokenLiteral())
+		return false
+	}
+
+	letStatement, ok := statement.(*ast.LetStatement)
+	if !ok {
+		t.Errorf("Invalid let statement type. Got %T",
+			statement.(*ast.LetStatement))
+		return false
+	}
+
+	if letStatement.Name.Value != name {
+		t.Errorf("letStatement.Name.Value invalid. Got %s instead of %s",
+			letStatement.Name.Value, name)
+		return false
+	}
+
+	if letStatement.Name.TokenLiteral() != name {
+		t.Errorf("letStatement.Name.TokenLitral() invalid. Got %s instead of %s",
+			letStatement.Name.TokenLiteral(), name)
+		return false
+	}
+
+	return true
+}
+
 func testIdentifier(t *testing.T, expression ast.Expression, value string) bool {
 	identifier, ok := expression.(*ast.Identifier)
 	if !ok {
@@ -176,11 +205,11 @@ func setUpTest(t *testing.T, input string) *ast.ProgramRoot {
 }
 
 func TestLetStatement(t *testing.T) {
-	input := `
-	let x = 5;
-	let y = 10;
-	let foobar = 12345;
-	`
+	// input := `
+	// let x = 5;
+	// let y = 10;
+	// let foobar = 12345;
+	// `
 
 	// input := `
 	// let x 5;
@@ -188,60 +217,76 @@ func TestLetStatement(t *testing.T) {
 	// let 12345;
 	// `
 
-	program := setUpTest(t, input)
-
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
-	}
-
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements doesn't contain 3 statements. Got %d",
-			len(program.Statements))
-	}
-
-	expectedLetIdentifiers := []struct {
+	tests := []struct {
+		input              string
 		expectedIdentifier string
+		expectedValue      interface{}
 	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
+		{"let x = 5;", "x", 5},
+		{"let y = true;", "y", true},
+		{"let foobar = y;", "foobar", "y"},
 	}
 
-	for i, test := range expectedLetIdentifiers {
-		statement := program.Statements[i]
-		if !checkLetStatement(t, statement, test.expectedIdentifier) {
+	for _, test := range tests {
+		program := setUpTest(t, test.input)
+
+		if program == nil {
+			t.Fatalf("ParseProgram() returned nil")
+		}
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements doesn't contain 1 statements. Got %d",
+				len(program.Statements))
+		}
+
+		statement := program.Statements[0]
+		if !testLetStatement(t, statement, test.expectedIdentifier) {
+			return
+		}
+
+		value := statement.(*ast.LetStatement).Value
+		if !testLiteralExpression(t, value, test.expectedValue) {
 			return
 		}
 	}
 }
 
 func TestReturnStatement(t *testing.T) {
-	input := `
-	return 5;
-	return 10;
-	return 101;`
-
-	program := setUpTest(t, input)
-
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
+	tests := []struct {
+		input         string
+		expectedValue interface{}
+	}{
+		{"return 5;", 5},
+		{"return true;", true},
+		{"return foobar;", "foobar"},
 	}
 
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements doesn't contain 3 statements. Got %d",
-			len(program.Statements))
-	}
+	for _, test := range tests {
+		program := setUpTest(t, test.input)
 
-	for _, statement := range program.Statements {
+		if program == nil {
+			t.Fatalf("ParseProgram() returned nil")
+		}
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements doesn't contain 1 statements. Got %d",
+				len(program.Statements))
+		}
+
+		statement := program.Statements[0]
 		returnStatement, ok := statement.(*ast.ReturnStatement)
 		if !ok {
-			t.Errorf("Statement is not ReturnStatement type. Got %T", statement)
-			continue
+			t.Fatalf("statement is not ast.ReturnStatement. Got %T",
+				statement.(*ast.ReturnStatement))
 		}
 
 		if returnStatement.TokenLiteral() != "return" {
-			t.Errorf("Return statemen token literal is not 'return'. Got %q",
+			t.Fatalf("returnStatement.TokenLiteral() is not return. Got %s",
 				returnStatement.TokenLiteral())
+		}
+
+		if testLiteralExpression(t, returnStatement.ReturnValue, test.expectedValue) {
+			return
 		}
 	}
 }
