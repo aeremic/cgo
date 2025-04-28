@@ -5,8 +5,9 @@ import (
 	"github.com/aeremic/cgo/value"
 )
 
-// Only once created when referenced.
+// Only once created. Reused when referenced again.
 var (
+	NULL  = &value.Null{}
 	TRUE  = &value.Boolean{Value: true}
 	FALSE = &value.Boolean{Value: false}
 )
