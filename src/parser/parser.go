@@ -60,7 +60,7 @@ func (p *Parser) Errors() []string {
 }
 
 func (p *Parser) LogPeekError(t token.Type) {
-	msg := fmt.Sprintf("Expected next token %s. Got %s", t, p.peekToken.Type)
+	msg := fmt.Sprintf("Expected %s token. Got %s instead", t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
 }
 

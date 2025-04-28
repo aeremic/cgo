@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aeremic/cgo/token"
+	"github.com/aeremic/cgo/parser"
 	"github.com/aeremic/cgo/tokenizer"
 )
 
@@ -24,14 +24,21 @@ func Start(in io.Reader, out io.Writer) {
 			return
 		}
 
-		line := scanner.Text()
+		l := scanner.Text()
+		t := tokenizer.New(l)
+		p := parser.New(t)
 
-		t := tokenizer.New(line)
-		for parsedToken := t.NextToken(); parsedToken.Type != token.EOF; parsedToken = t.NextToken() {
-			_, err := fmt.Fprintf(out, "%+v\n", parsedToken)
-			if err != nil {
-				return
+		program := p.ParseProgram()
+		if len(p.Errors()) != 0 {
+			io.WriteString(out, "Parse error:\n")
+			for _, msg := range p.Errors() {
+				io.WriteString(out, "\t"+msg+"\n")
 			}
+
+			continue
 		}
+
+		io.WriteString(out, program.String())
+		io.WriteString(out, "\n")
 	}
 }
