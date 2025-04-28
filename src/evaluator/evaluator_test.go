@@ -34,6 +34,24 @@ func testIntegerValueWrapper(t *testing.T, v value.Wrapper, expected int64) bool
 	return true
 }
 
+func testBooleanValueWrapper(t *testing.T, v value.Wrapper, expected bool) bool {
+	result, ok := v.(*value.Boolean)
+	if !ok {
+		t.Errorf("v is not Boolean type. Got %T", v)
+
+		return false
+	}
+
+	if result.Value != expected {
+		t.Errorf("v has wrong value. Got %t instead of %t",
+			result.Value, expected)
+
+		return false
+	}
+
+	return true
+}
+
 func TestEvalIntegerExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -46,5 +64,20 @@ func TestEvalIntegerExpression(t *testing.T) {
 	for _, test := range tests {
 		evaluated := testEval(test.input)
 		testIntegerValueWrapper(t, evaluated, test.expected)
+	}
+}
+
+func TestEvalBooleanExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"true", true},
+		{"false", false},
+	}
+
+	for _, test := range tests {
+		evaluated := testEval(test.input)
+		testBooleanValueWrapper(t, evaluated, test.expected)
 	}
 }

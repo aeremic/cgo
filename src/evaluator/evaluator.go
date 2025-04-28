@@ -5,6 +5,12 @@ import (
 	"github.com/aeremic/cgo/value"
 )
 
+// Only once created when referenced.
+var (
+	TRUE  = &value.Boolean{Value: true}
+	FALSE = &value.Boolean{Value: false}
+)
+
 func evalStatements(statements []ast.Statement) value.Wrapper {
 	var result value.Wrapper
 
@@ -24,6 +30,12 @@ func Eval(node ast.Node) value.Wrapper {
 	case *ast.IntegerLiteral:
 		return &value.Integer{
 			Value: node.Value,
+		}
+	case *ast.Boolean:
+		if node.Value {
+			return TRUE
+		} else {
+			return FALSE
 		}
 	}
 
