@@ -34,7 +34,7 @@ func evalBangOperatorExpression(right value.Wrapper) value.Wrapper {
 
 func evalMinusPrefixOperatorExpression(right value.Wrapper) value.Wrapper {
 	if right.Type() != value.INTEGER {
-		newError("unknown operator: -%s", right.Type())
+		return newError("unknown operator: -%s", right.Type())
 	}
 
 	v := right.(*value.Integer).Value
