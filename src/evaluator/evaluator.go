@@ -19,10 +19,22 @@ func Eval(node ast.Node) value.Wrapper {
 		}
 	case *ast.PrefixExpression:
 		right := Eval(node.Right)
+		if isError(right) {
+			return right
+		}
+
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
 		left := Eval(node.Left)
+		if isError(left) {
+			return left
+		}
+
 		right := Eval(node.Right)
+		if isError(right) {
+			return right
+		}
+
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
 		return evalBlockStatements(node)
@@ -30,6 +42,10 @@ func Eval(node ast.Node) value.Wrapper {
 		return evalIfExpression(node)
 	case *ast.ReturnStatement:
 		val := Eval(node.ReturnValue)
+		if isError(val) {
+			return val
+		}
+
 		return &value.ReturnValue{
 			Value: val,
 		}
@@ -44,8 +60,11 @@ func evalProgramRoot(statements []ast.Statement) value.Wrapper {
 	for _, statement := range statements {
 		result = Eval(statement)
 
-		if returnValue, ok := result.(*value.ReturnValue); ok {
-			return returnValue.Value
+		switch rt := result.(type) {
+		case *value.ReturnValue:
+			return rt.Value
+		case *value.Error:
+			return rt
 		}
 	}
 
@@ -118,8 +137,11 @@ func evalBlockStatements(block *ast.BlockStatement) value.Wrapper {
 	for _, statement := range block.Statements {
 		result = Eval(statement)
 
-		if result != nil && result.Type() == value.RETURN {
-			return result
+		if result != nil {
+			rt := result.Type()
+			if rt == value.RETURN || rt == value.ERROR {
+				return result
+			}
 		}
 	}
 
@@ -128,6 +150,10 @@ func evalBlockStatements(block *ast.BlockStatement) value.Wrapper {
 
 func evalIfExpression(ie *ast.IfExpression) value.Wrapper {
 	condition := Eval(ie.Condition)
+	if isError(condition) {
+		return condition
+	}
+
 	if isTruthy(condition) {
 		return Eval(ie.Consequence)
 	} else if ie.Alternative != nil {

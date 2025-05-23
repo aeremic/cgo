@@ -19,6 +19,14 @@ func newError(format string, a ...interface{}) *value.Error {
 	}
 }
 
+func isError(v value.Wrapper) bool {
+	if v != nil {
+		return v.Type() == value.ERROR
+	}
+
+	return false
+}
+
 func evalBangOperatorExpression(right value.Wrapper) value.Wrapper {
 	switch right {
 	case TRUE:
