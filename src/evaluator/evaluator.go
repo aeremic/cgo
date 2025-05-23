@@ -24,10 +24,16 @@ func evalStatements(statements []ast.Statement) value.Wrapper {
 
 func Eval(node ast.Node) value.Wrapper {
 	switch node := node.(type) {
-	case *ast.ProgramRoot:
-		return evalStatements(node.Statements)
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
+	case *ast.ProgramRoot:
+		return evalStatements(node.Statements)
+	case *ast.Boolean:
+		return nativeBoolToBoolean(node.Value)
+	case *ast.IntegerLiteral:
+		return &value.Integer{
+			Value: node.Value,
+		}
 	case *ast.PrefixExpression:
 		right := Eval(node.Right)
 		return evalPrefixExpression(node.Operator, right)
@@ -35,16 +41,6 @@ func Eval(node ast.Node) value.Wrapper {
 		left := Eval(node.Left)
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
-	case *ast.IntegerLiteral:
-		return &value.Integer{
-			Value: node.Value,
-		}
-	case *ast.Boolean:
-		if node.Value {
-			return TRUE
-		} else {
-			return FALSE
-		}
 	}
 
 	return nil
@@ -85,6 +81,15 @@ func evalPrefixExpression(operator string, right value.Wrapper) value.Wrapper {
 	}
 }
 
+func nativeBoolToBoolean(input bool) *value.Boolean {
+	if input {
+		return TRUE
+	} else {
+		return FALSE
+	}
+
+}
+
 func evalIntegerInfixExpression(operator string, left value.Wrapper, right value.Wrapper) value.Wrapper {
 	lv := left.(*value.Integer).Value
 	rv := right.(*value.Integer).Value
@@ -106,6 +111,14 @@ func evalIntegerInfixExpression(operator string, left value.Wrapper, right value
 		return &value.Integer{
 			Value: lv / rv,
 		}
+	case "<":
+		return nativeBoolToBoolean(lv < rv)
+	case ">":
+		return nativeBoolToBoolean(lv > rv)
+	case "==":
+		return nativeBoolToBoolean(lv == rv)
+	case "!=":
+		return nativeBoolToBoolean(lv != rv)
 	default:
 		return NULL
 	}
@@ -115,6 +128,10 @@ func evalInfixExpression(operator string, left value.Wrapper, right value.Wrappe
 	switch {
 	case left.Type() == value.INTEGER && right.Type() == value.INTEGER:
 		return evalIntegerInfixExpression(operator, left, right)
+	case operator == "==":
+		return nativeBoolToBoolean(left == right)
+	case operator == "!=":
+		return nativeBoolToBoolean(left != right)
 	default:
 		return NULL
 	}
