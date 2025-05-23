@@ -41,6 +41,10 @@ func Eval(node ast.Node) value.Wrapper {
 		left := Eval(node.Left)
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
+	case *ast.BlockStatement:
+		return evalStatements(node.Statements)
+	case *ast.IfExpression:
+		return evalIfExpression(node)
 	}
 
 	return nil
@@ -133,6 +137,30 @@ func evalInfixExpression(operator string, left value.Wrapper, right value.Wrappe
 	case operator == "!=":
 		return nativeBoolToBoolean(left != right)
 	default:
+		return NULL
+	}
+}
+
+func isTruthy(v value.Wrapper) bool {
+	switch v {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+}
+
+func evalIfExpression(ie *ast.IfExpression) value.Wrapper {
+	condition := Eval(ie.Condition)
+	if isTruthy(condition) {
+		return Eval(ie.Consequence)
+	} else if ie.Alternative != nil {
+		return Eval(ie.Alternative)
+	} else {
 		return NULL
 	}
 }

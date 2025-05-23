@@ -34,6 +34,15 @@ func testIntegerValueWrapper(t *testing.T, v value.Wrapper, expected int64) bool
 	return true
 }
 
+func testNullValueWrapper(t *testing.T, v value.Wrapper) bool {
+	if v != NULL {
+		t.Errorf("value is not NULL. Got %T (%+v)", v, v)
+		return false
+	}
+
+	return true
+}
+
 func testBooleanValueWrapper(t *testing.T, v value.Wrapper, expected bool) bool {
 	result, ok := v.(*value.Boolean)
 	if !ok {
@@ -129,5 +138,30 @@ func TestBangOperator(t *testing.T) {
 	for _, test := range tests {
 		evaluated := testEval(test.input)
 		testBooleanValueWrapper(t, evaluated, test.expected)
+	}
+}
+
+func TestIfElseExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"if (true) { 10 }", 10},
+		{"if (false) { 10 }", nil},
+		{"if (1) { 10 }", 10},
+		{"if (1 < 2) { 10 }", 10},
+		{"if (1 > 2) { 10 }", nil},
+		{"if (1 > 2) { 10 } else { 20 }", 20},
+		{"if (1 < 2) { 10 } else { 20 }", 10},
+	}
+
+	for _, test := range tests {
+		evaluated := testEval(test.input)
+		integer, ok := test.expected.(int)
+		if ok {
+			testIntegerValueWrapper(t, evaluated, int64(integer))
+		} else {
+			testNullValueWrapper(t, evaluated)
+		}
 	}
 }
