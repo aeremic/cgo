@@ -9,6 +9,7 @@ const (
 	BOOLEAN = "BOOLEAN"
 	NULL    = "NULL"
 	RETURN  = "RETURN"
+	ERROR   = "ERROR"
 )
 
 type Wrapper interface {
@@ -60,4 +61,16 @@ func (rv *ReturnValue) Type() Type {
 
 func (rv *ReturnValue) Sprintf() string {
 	return rv.Value.Sprintf()
+}
+
+type Error struct {
+	Message string
+}
+
+func (e *Error) Type() Type {
+	return ERROR
+}
+
+func (e *Error) Sprintf() string {
+	return "ERROR: " + e.Message
 }

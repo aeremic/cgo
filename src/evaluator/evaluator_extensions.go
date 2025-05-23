@@ -1,0 +1,65 @@
+package evaluator
+
+import (
+	"fmt"
+
+	"github.com/aeremic/cgo/value"
+)
+
+// Only once created. Reused when referenced again.
+var (
+	NULL  = &value.Null{}
+	TRUE  = &value.Boolean{Value: true}
+	FALSE = &value.Boolean{Value: false}
+)
+
+func newError(format string, a ...interface{}) *value.Error {
+	return &value.Error{
+		Message: fmt.Sprintf(format, a...),
+	}
+}
+
+func evalBangOperatorExpression(right value.Wrapper) value.Wrapper {
+	switch right {
+	case TRUE:
+		return FALSE
+	case FALSE:
+		return TRUE
+	case NULL:
+		return TRUE
+	default:
+		return FALSE
+	}
+}
+
+func evalMinusPrefixOperatorExpression(right value.Wrapper) value.Wrapper {
+	if right.Type() != value.INTEGER {
+		newError("unknown operator: -%s", right.Type())
+	}
+
+	v := right.(*value.Integer).Value
+	return &value.Integer{
+		Value: -v,
+	}
+}
+
+func nativeBoolToBoolean(input bool) *value.Boolean {
+	if input {
+		return TRUE
+	} else {
+		return FALSE
+	}
+}
+
+func isTruthy(v value.Wrapper) bool {
+	switch v {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+}
