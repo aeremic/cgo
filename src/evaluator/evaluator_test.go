@@ -165,3 +165,34 @@ func TestIfElseExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestReturnStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"return 10;", 10},
+		{"return 10; 9;", 10},
+		{"return 2 * 5; 9;", 10},
+		{"9; return 2 * 5; 9;", 10},
+		{
+			`if (true) {
+				if (true) {
+					if (true) {
+						return 20;
+					}
+
+					return 10;
+				}
+
+				return 1;
+			}
+			`, 20,
+		},
+	}
+
+	for _, test := range tests {
+		evaluated := testEval(test.input)
+		testIntegerValueWrapper(t, evaluated, test.expected)
+	}
+}

@@ -8,6 +8,7 @@ const (
 	INTEGER = "INTEGER"
 	BOOLEAN = "BOOLEAN"
 	NULL    = "NULL"
+	RETURN  = "RETURN"
 )
 
 type Wrapper interface {
@@ -47,4 +48,16 @@ func (n *Null) Type() Type {
 
 func (n *Null) Sprintf() string {
 	return "null"
+}
+
+type ReturnValue struct {
+	Value Wrapper
+}
+
+func (rv *ReturnValue) Type() Type {
+	return RETURN
+}
+
+func (rv *ReturnValue) Sprintf() string {
+	return rv.Value.Sprintf()
 }

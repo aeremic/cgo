@@ -12,22 +12,12 @@ var (
 	FALSE = &value.Boolean{Value: false}
 )
 
-func evalStatements(statements []ast.Statement) value.Wrapper {
-	var result value.Wrapper
-
-	for _, statement := range statements {
-		result = Eval(statement)
-	}
-
-	return result
-}
-
 func Eval(node ast.Node) value.Wrapper {
 	switch node := node.(type) {
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
 	case *ast.ProgramRoot:
-		return evalStatements(node.Statements)
+		return evalProgramRoot(node.Statements)
 	case *ast.Boolean:
 		return nativeBoolToBoolean(node.Value)
 	case *ast.IntegerLiteral:
@@ -42,12 +32,31 @@ func Eval(node ast.Node) value.Wrapper {
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
-		return evalStatements(node.Statements)
+		return evalBlockStatements(node)
 	case *ast.IfExpression:
 		return evalIfExpression(node)
+	case *ast.ReturnStatement:
+		val := Eval(node.ReturnValue)
+		return &value.ReturnValue{
+			Value: val,
+		}
 	}
 
 	return nil
+}
+
+func evalProgramRoot(statements []ast.Statement) value.Wrapper {
+	var result value.Wrapper
+
+	for _, statement := range statements {
+		result = Eval(statement)
+
+		if returnValue, ok := result.(*value.ReturnValue); ok {
+			return returnValue.Value
+		}
+	}
+
+	return result
 }
 
 func evalBangOperatorExpression(right value.Wrapper) value.Wrapper {
@@ -91,7 +100,6 @@ func nativeBoolToBoolean(input bool) *value.Boolean {
 	} else {
 		return FALSE
 	}
-
 }
 
 func evalIntegerInfixExpression(operator string, left value.Wrapper, right value.Wrapper) value.Wrapper {
@@ -139,6 +147,20 @@ func evalInfixExpression(operator string, left value.Wrapper, right value.Wrappe
 	default:
 		return NULL
 	}
+}
+
+func evalBlockStatements(block *ast.BlockStatement) value.Wrapper {
+	var result value.Wrapper
+
+	for _, statement := range block.Statements {
+		result = Eval(statement)
+
+		if result != nil && result.Type() == value.RETURN {
+			return result
+		}
+	}
+
+	return result
 }
 
 func isTruthy(v value.Wrapper) bool {
