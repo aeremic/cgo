@@ -5,43 +5,52 @@ import (
 	"github.com/aeremic/cgo/value"
 )
 
-func Eval(node ast.Node) value.Wrapper {
+func Eval(node ast.Node, env *value.Environment) value.Wrapper {
 	switch node := node.(type) {
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(node.Expression, env)
 	case *ast.ProgramRoot:
-		return evalProgramRoot(node.Statements)
+		return evalProgramRoot(node.Statements, env)
+	case *ast.Identifier:
+		return evalIdentifier(node, env)
 	case *ast.Boolean:
 		return nativeBoolToBoolean(node.Value)
 	case *ast.IntegerLiteral:
 		return &value.Integer{
 			Value: node.Value,
 		}
+	case *ast.LetStatement:
+		val := Eval(node.Value, env)
+		if isError(val) {
+			return val
+		}
+
+		env.Set(node.Name.Value, val)
 	case *ast.PrefixExpression:
-		right := Eval(node.Right)
+		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
 
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
-		left := Eval(node.Left)
+		left := Eval(node.Left, env)
 		if isError(left) {
 			return left
 		}
 
-		right := Eval(node.Right)
+		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
 
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.BlockStatement:
-		return evalBlockStatements(node)
+		return evalBlockStatements(node, env)
 	case *ast.IfExpression:
-		return evalIfExpression(node)
+		return evalIfExpression(node, env)
 	case *ast.ReturnStatement:
-		val := Eval(node.ReturnValue)
+		val := Eval(node.ReturnValue, env)
 		if isError(val) {
 			return val
 		}
@@ -54,11 +63,11 @@ func Eval(node ast.Node) value.Wrapper {
 	return nil
 }
 
-func evalProgramRoot(statements []ast.Statement) value.Wrapper {
+func evalProgramRoot(statements []ast.Statement, env *value.Environment) value.Wrapper {
 	var result value.Wrapper
 
 	for _, statement := range statements {
-		result = Eval(statement)
+		result = Eval(statement, env)
 
 		switch rt := result.(type) {
 		case *value.ReturnValue:
@@ -131,11 +140,11 @@ func evalInfixExpression(operator string, left value.Wrapper, right value.Wrappe
 	}
 }
 
-func evalBlockStatements(block *ast.BlockStatement) value.Wrapper {
+func evalBlockStatements(block *ast.BlockStatement, env *value.Environment) value.Wrapper {
 	var result value.Wrapper
 
 	for _, statement := range block.Statements {
-		result = Eval(statement)
+		result = Eval(statement, env)
 
 		if result != nil {
 			rt := result.Type()
@@ -148,16 +157,16 @@ func evalBlockStatements(block *ast.BlockStatement) value.Wrapper {
 	return result
 }
 
-func evalIfExpression(ie *ast.IfExpression) value.Wrapper {
-	condition := Eval(ie.Condition)
+func evalIfExpression(ie *ast.IfExpression, env *value.Environment) value.Wrapper {
+	condition := Eval(ie.Condition, env)
 	if isError(condition) {
 		return condition
 	}
 
 	if isTruthy(condition) {
-		return Eval(ie.Consequence)
+		return Eval(ie.Consequence, env)
 	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative)
+		return Eval(ie.Alternative, env)
 	} else {
 		return NULL
 	}

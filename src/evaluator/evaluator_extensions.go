@@ -3,6 +3,7 @@ package evaluator
 import (
 	"fmt"
 
+	"github.com/aeremic/cgo/ast"
 	"github.com/aeremic/cgo/value"
 )
 
@@ -49,6 +50,15 @@ func evalMinusPrefixOperatorExpression(right value.Wrapper) value.Wrapper {
 	return &value.Integer{
 		Value: -v,
 	}
+}
+
+func evalIdentifier(node *ast.Identifier, env *value.Environment) value.Wrapper {
+	val, ok := env.Get(node.Value)
+	if !ok {
+		return newError("%s", "identifier not found: "+node.Value)
+	}
+
+	return val
 }
 
 func nativeBoolToBoolean(input bool) *value.Boolean {

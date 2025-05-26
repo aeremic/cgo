@@ -13,7 +13,9 @@ func testEval(input string) value.Wrapper {
 	p := parser.New(t)
 	program := p.ParseProgram()
 
-	return Eval(program)
+	env := value.NewEnvironment()
+
+	return Eval(program, env)
 }
 
 func testIntegerValueWrapper(t *testing.T, v value.Wrapper, expected int64) bool {
@@ -236,6 +238,10 @@ func TestErrorHandling(t *testing.T) {
 				}
 			`, "unknown operator: BOOLEAN + BOOLEAN",
 		},
+		{
+			"foobar",
+			"identifier not found: foobar",
+		},
 	}
 
 	for _, test := range tests {
@@ -250,5 +256,22 @@ func TestErrorHandling(t *testing.T) {
 			t.Errorf("Invalid message. Got %s instead of %s",
 				errorWrapped.Message, test.expectedMessage)
 		}
+	}
+}
+
+func TestLetStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let a = 5; a;", 5},
+		{"let a = 5 * 5; a;", 25},
+		{"let a = 5; let b = a; b;", 5},
+		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+	}
+
+	for _, test := range tests {
+		evaluated := testEval(test.input)
+		testIntegerValueWrapper(t, evaluated, test.expected)
 	}
 }
