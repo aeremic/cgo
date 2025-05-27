@@ -58,6 +58,27 @@ func Eval(node ast.Node, env *value.Environment) value.Wrapper {
 		return &value.ReturnValue{
 			Value: val,
 		}
+	case *ast.CallExpression:
+		function := Eval(node.Function, env)
+		if isError(function) {
+			return function
+		}
+
+		args := evalExpressions(node.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+
+		return applyFunction(function, args)
+	case *ast.FunctionLiteral:
+		params := node.Parameters
+		body := node.Body
+
+		return &value.Function{
+			Parameters: params,
+			Body:       body,
+			Env:        env,
+		}
 	}
 
 	return nil
@@ -170,4 +191,49 @@ func evalIfExpression(ie *ast.IfExpression, env *value.Environment) value.Wrappe
 	} else {
 		return NULL
 	}
+}
+
+func evalExpressions(exps []ast.Expression, env *value.Environment) []value.Wrapper {
+	var results []value.Wrapper
+
+	for _, e := range exps {
+		evaluated := Eval(e, env)
+		if isError(evaluated) {
+			return []value.Wrapper{evaluated}
+		}
+
+		results = append(results, evaluated)
+	}
+
+	return results
+}
+
+func applyFunction(fn value.Wrapper, args []value.Wrapper) value.Wrapper {
+	function, ok := fn.(*value.Function)
+	if !ok {
+		return newError("not a function: %s", fn.Type())
+	}
+
+	extendedEnv := createExtendedEnv(function, args)
+	evaluated := Eval(function.Body, extendedEnv)
+
+	return unwrapReturnValue(evaluated)
+}
+
+func createExtendedEnv(fn *value.Function, args []value.Wrapper) *value.Environment {
+	env := value.NewEnclosedEnvironment(fn.Env)
+
+	for paramIdx, param := range fn.Parameters {
+		env.Set(param.Value, args[paramIdx])
+	}
+
+	return env
+}
+
+func unwrapReturnValue(evaluated value.Wrapper) value.Wrapper {
+	if returnValue, ok := evaluated.(*value.ReturnValue); ok {
+		return returnValue.Value
+	}
+
+	return evaluated
 }

@@ -1,15 +1,22 @@
 package value
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+
+	"github.com/aeremic/cgo/ast"
+)
 
 type Type string
 
 const (
-	INTEGER = "INTEGER"
-	BOOLEAN = "BOOLEAN"
-	NULL    = "NULL"
-	RETURN  = "RETURN"
-	ERROR   = "ERROR"
+	INTEGER  = "INTEGER"
+	BOOLEAN  = "BOOLEAN"
+	NULL     = "NULL"
+	RETURN   = "RETURN"
+	ERROR    = "ERROR"
+	FUNCTION = "FUNCTION"
 )
 
 type Wrapper interface {
@@ -73,4 +80,32 @@ func (e *Error) Type() Type {
 
 func (e *Error) Sprintf() string {
 	return "ERROR: " + e.Message
+}
+
+type Function struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        *Environment
+}
+
+func (f *Function) Type() Type {
+	return FUNCTION
+}
+
+func (f *Function) Sprintf() string {
+	var out bytes.Buffer
+
+	params := []string{}
+	for _, p := range f.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString("fn")
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("\n}")
+
+	return out.String()
 }
