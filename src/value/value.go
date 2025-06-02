@@ -12,6 +12,7 @@ type Type string
 
 const (
 	INTEGER  = "INTEGER"
+	STRING   = "STRING"
 	BOOLEAN  = "BOOLEAN"
 	NULL     = "NULL"
 	RETURN   = "RETURN"
@@ -34,6 +35,18 @@ func (i *Integer) Type() Type {
 
 func (i *Integer) Sprintf() string {
 	return fmt.Sprintf("%d", i.Value)
+}
+
+type String struct {
+	Value string
+}
+
+func (s *String) Type() Type {
+	return STRING
+}
+
+func (s *String) Sprintf() string {
+	return s.Value
 }
 
 type Boolean struct {

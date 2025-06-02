@@ -765,3 +765,30 @@ func TestCallExpressionParametersParsing(t *testing.T) {
 		}
 	}
 }
+
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello world";`
+
+	program := setUpTest(t, input)
+
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements doesn't contain 1 statements. Got %d",
+			len(program.Statements))
+	}
+
+	statement := program.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := statement.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("Expression is not StringLiteral type. Got %T",
+			statement.Expression)
+	}
+
+	if literal.Value != "hello world" {
+		t.Errorf("literal.Value is not %s. Got %s",
+			"hello world", literal.Value)
+	}
+}

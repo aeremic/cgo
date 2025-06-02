@@ -7,7 +7,7 @@ import (
 type Tokenizer struct {
 	input        string
 	position     int  // Current position in input
-	readPosition int  // Position used for peeking after current position
+	nextPosition int  // Position used for peeking after current position
 	ch           byte // Current position character
 }
 
@@ -23,14 +23,14 @@ func New(input string) *Tokenizer {
 
 // Return next character and advance input position
 func (t *Tokenizer) nextChar() {
-	if t.readPosition >= len(t.input) {
+	if t.nextPosition >= len(t.input) {
 		t.ch = 0 // Set to ASCII NUL if end is reached
 	} else {
-		t.ch = t.input[t.readPosition]
+		t.ch = t.input[t.nextPosition]
 	}
 
-	t.position = t.readPosition
-	t.readPosition += 1
+	t.position = t.nextPosition
+	t.nextPosition += 1
 }
 
 // NextToken Parse current character and move pointer to the next one
@@ -85,6 +85,11 @@ func (t *Tokenizer) NextToken() token.Token {
 		parsedToken = token.Token{Type: token.GT, Literal: string(t.ch)}
 	case 0:
 		parsedToken = token.Token{Type: token.EOF, Literal: ""}
+	case '"':
+		parsedToken = token.Token{
+			Type:    token.STRING,
+			Literal: t.readString(),
+		}
 	default:
 		if isChLetter(t.ch) {
 			parsedToken.Literal = t.readIdentifier()
@@ -120,10 +125,10 @@ func (t *Tokenizer) skipWhitespaces() {
 }
 
 func (t *Tokenizer) peekChar() byte {
-	if t.readPosition >= len(t.input) {
+	if t.nextPosition >= len(t.input) {
 		return 0
 	} else {
-		return t.input[t.readPosition]
+		return t.input[t.nextPosition]
 	}
 }
 
@@ -143,6 +148,18 @@ func (t *Tokenizer) readNumber() string {
 	}
 
 	return t.input[initialPosition:t.position]
+}
+
+func (t *Tokenizer) readString() string {
+	position := t.position + 1
+	for {
+		t.nextChar()
+		if t.ch == '"' || t.ch == 0 {
+			break
+		}
+	}
+
+	return t.input[position:t.position]
 }
 
 func isChLetter(ch byte) bool {

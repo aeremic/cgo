@@ -19,6 +19,10 @@ func Eval(node ast.Node, env *value.Environment) value.Wrapper {
 		return &value.Integer{
 			Value: node.Value,
 		}
+	case *ast.StringLiteral:
+		return &value.String{
+			Value: node.Value,
+		}
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
 		if isError(val) {
