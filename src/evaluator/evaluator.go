@@ -150,12 +150,27 @@ func evalIntegerInfixExpression(operator string, left value.Wrapper, right value
 	}
 }
 
+func evalStringInfixExpression(operator string, left value.Wrapper, right value.Wrapper) value.Wrapper {
+	if operator != "+" {
+		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
+	}
+
+	lv := left.(*value.String).Value
+	rv := right.(*value.String).Value
+
+	return &value.String{
+		Value: lv + rv,
+	}
+}
+
 func evalInfixExpression(operator string, left value.Wrapper, right value.Wrapper) value.Wrapper {
 	switch {
 	case left.Type() != right.Type():
 		return newError("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	case left.Type() == value.INTEGER && right.Type() == value.INTEGER:
 		return evalIntegerInfixExpression(operator, left, right)
+	case left.Type() == value.STRING && right.Type() == value.STRING:
+		return evalStringInfixExpression(operator, left, right)
 	case operator == "==":
 		return nativeBoolToBoolean(left == right)
 	case operator == "!=":
