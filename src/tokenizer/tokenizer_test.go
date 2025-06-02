@@ -46,8 +46,7 @@ func TestRead(t *testing.T) {
 		10 == 10;
 		10 != 9;
 
-		"foobar"
-		"foo bar"
+		"foo \"barfoo\""
 	`
 
 	expectedTokens := []struct {
@@ -132,8 +131,9 @@ func TestRead(t *testing.T) {
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
 
-		{token.STRING, "foobar"},
-		{token.STRING, "foo bar"},
+		//{token.STRING, "foobar"},
+		//{token.STRING, "foo bar"},
+		{token.STRING, `foo \"barfoo\"`},
 	}
 
 	tokenizer := New(input)

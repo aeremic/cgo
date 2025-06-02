@@ -153,7 +153,13 @@ func (t *Tokenizer) readNumber() string {
 func (t *Tokenizer) readString() string {
 	position := t.position + 1
 	for {
-		t.nextChar()
+		if t.ch == '\\' && t.input[t.position+1] == '"' {
+			t.nextChar()
+			t.nextChar()
+		} else {
+			t.nextChar()
+		}
+
 		if t.ch == '"' || t.ch == 0 {
 			break
 		}
