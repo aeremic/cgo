@@ -792,3 +792,33 @@ func TestStringLiteralExpression(t *testing.T) {
 			"hello world", literal.Value)
 	}
 }
+
+func TestParsingArrayLiterals(t *testing.T) {
+	input := "[1, 2 * 2, 3 + 3]"
+
+	program := setUpTest(t, input)
+
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements doesn't contain 1 statements. Got %d",
+			len(program.Statements))
+	}
+
+	statement, ok := program.Statements[0].(*ast.ExpressionStatement)
+	array, ok := statement.Expression.(*ast.ArrayLiteral)
+	if !ok {
+		t.Fatalf("statement is not ArrayLiteral type. Got %T", statement.Expression)
+	}
+
+	if len(array.Elements) != 3 {
+		t.Fatalf("array.Elements len invalid. Got %d instead of %d",
+			len(array.Elements), 3)
+	}
+
+	testIntegerLiteralExpression(t, array.Elements[0], 1)
+	testInfixExpression(t, array.Elements[1], 2, "*", 2)
+	testInfixExpression(t, array.Elements[2], 3, "+", 3)
+}

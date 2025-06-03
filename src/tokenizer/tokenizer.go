@@ -60,6 +60,10 @@ func (t *Tokenizer) NextToken() token.Token {
 		parsedToken = token.Token{Type: token.LBRACE, Literal: string(t.ch)}
 	case '}':
 		parsedToken = token.Token{Type: token.RBRACE, Literal: string(t.ch)}
+	case '[':
+		parsedToken = token.Token{Type: token.LBRACKET, Literal: string(t.ch)}
+	case ']':
+		parsedToken = token.Token{Type: token.RBRACKET, Literal: string(t.ch)}
 	case ',':
 		parsedToken = token.Token{Type: token.COMMA, Literal: string(t.ch)}
 	case '+':

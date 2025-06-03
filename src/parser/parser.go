@@ -39,6 +39,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNC, p.parseFunctionLiteral)
+	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.EQUALS, p.parseInfixExpression)
@@ -243,7 +244,7 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 		Function: function,
 	}
 
-	expression.Arguments = p.parseCallArguments()
+	expression.Arguments = p.parseExpressionList(token.RPAREN)
 
 	return expression
 }
@@ -384,4 +385,39 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	return identifiers
+}
+
+func (p *Parser) parseArrayLiteral() ast.Expression {
+	array := &ast.ArrayLiteral{
+		Token: p.currentToken,
+	}
+
+	array.Elements = p.parseExpressionList(token.RBRACKET)
+
+	return array
+}
+
+func (p *Parser) parseExpressionList(end token.Type) []ast.Expression {
+	list := []ast.Expression{}
+
+	if p.checkPeekTokenType(end) {
+		p.nextToken()
+		return list
+	}
+
+	p.nextToken()
+
+	list = append(list, p.parseExpression(LOWEST))
+	for p.checkPeekTokenType(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	if !p.peekAndMove(end) {
+		return nil
+	}
+
+	return list
 }
