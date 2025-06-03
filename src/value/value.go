@@ -9,6 +9,7 @@ import (
 )
 
 type Type string
+type BuiltInFunction func(args ...Wrapper) Wrapper
 
 const (
 	INTEGER  = "INTEGER"
@@ -18,6 +19,7 @@ const (
 	RETURN   = "RETURN"
 	ERROR    = "ERROR"
 	FUNCTION = "FUNCTION"
+	BUILTIN  = "BUILTIN"
 )
 
 type Wrapper interface {
@@ -121,4 +123,16 @@ func (f *Function) Sprintf() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+type BuiltIn struct {
+	Fn BuiltInFunction
+}
+
+func (bi *BuiltIn) Type() Type {
+	return BUILTIN
+}
+
+func (bi *BuiltIn) Sprintf() string {
+	return "builtin function"
 }

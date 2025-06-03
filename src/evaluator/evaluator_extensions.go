@@ -53,12 +53,15 @@ func evalMinusPrefixOperatorExpression(right value.Wrapper) value.Wrapper {
 }
 
 func evalIdentifier(node *ast.Identifier, env *value.Environment) value.Wrapper {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("%s", "identifier not found: "+node.Value)
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
 
-	return val
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("%s", "identifier not found: "+node.Value)
 }
 
 func nativeBoolToBoolean(input bool) *value.Boolean {

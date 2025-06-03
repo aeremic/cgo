@@ -228,15 +228,17 @@ func evalExpressions(exps []ast.Expression, env *value.Environment) []value.Wrap
 }
 
 func applyFunction(fn value.Wrapper, args []value.Wrapper) value.Wrapper {
-	function, ok := fn.(*value.Function)
-	if !ok {
+	switch fn := fn.(type) {
+	case *value.Function:
+		extendedEnv := createExtendedEnv(fn, args)
+		evaluated := Eval(fn.Body, extendedEnv)
+
+		return unwrapReturnValue(evaluated)
+	case *value.BuiltIn:
+		return fn.Fn(args...)
+	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
-	extendedEnv := createExtendedEnv(function, args)
-	evaluated := Eval(function.Body, extendedEnv)
-
-	return unwrapReturnValue(evaluated)
 }
 
 func createExtendedEnv(fn *value.Function, args []value.Wrapper) *value.Environment {
