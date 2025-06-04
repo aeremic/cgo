@@ -20,6 +20,7 @@ const (
 	ERROR    = "ERROR"
 	FUNCTION = "FUNCTION"
 	BUILTIN  = "BUILTIN"
+	ARRAY    = "ARRAY"
 )
 
 type Wrapper interface {
@@ -135,4 +136,27 @@ func (bi *BuiltIn) Type() Type {
 
 func (bi *BuiltIn) Sprintf() string {
 	return "builtin function"
+}
+
+type Array struct {
+	Elements []Wrapper
+}
+
+func (a *Array) Type() Type {
+	return ARRAY
+}
+
+func (a *Array) Sprintf() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, element := range a.Elements {
+		elements = append(elements, element.Sprintf())
+	}
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
 }

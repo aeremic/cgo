@@ -83,6 +83,15 @@ func Eval(node ast.Node, env *value.Environment) value.Wrapper {
 			Body:       body,
 			Env:        env,
 		}
+	case *ast.ArrayLiteral:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+
+		return &value.Array{
+			Elements: elements,
+		}
 	}
 
 	return nil

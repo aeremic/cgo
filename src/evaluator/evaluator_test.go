@@ -401,3 +401,23 @@ func TestBuiltInFunctions(t *testing.T) {
 		}
 	}
 }
+
+func TestArrayLiterals(t *testing.T) {
+	input := "[1, 2 * 2, 3 + 3]"
+
+	evaluated := testEval(input)
+	result, ok := evaluated.(*value.Array)
+	if !ok {
+		t.Fatalf("invalid type. got %T (%+v) instead of %s",
+			evaluated, evaluated, "Array")
+	}
+
+	if len(result.Elements) != 3 {
+		t.Fatalf("invalid len of elements in the array. got %d instead of %d",
+			len(result.Elements), 3)
+	}
+
+	testIntegerValueWrapper(t, result.Elements[0], 1)
+	testIntegerValueWrapper(t, result.Elements[1], 4)
+	testIntegerValueWrapper(t, result.Elements[2], 6)
+}

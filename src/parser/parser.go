@@ -51,6 +51,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 
 	return p
 }
@@ -245,6 +246,22 @@ func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
 	}
 
 	expression.Arguments = p.parseExpressionList(token.RPAREN)
+
+	return expression
+}
+
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	expression := &ast.IndexExpression{
+		Token: p.currentToken,
+		Left:  left,
+	}
+
+	p.nextToken()
+	expression.Index = p.parseExpression(LOWEST)
+
+	if !p.peekAndMove(token.RBRACKET) {
+		return nil
+	}
 
 	return expression
 }
