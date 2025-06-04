@@ -92,6 +92,18 @@ func Eval(node ast.Node, env *value.Environment) value.Wrapper {
 		return &value.Array{
 			Elements: elements,
 		}
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+
+		return evalIndexExpression(left, index)
 	}
 
 	return nil
@@ -234,6 +246,27 @@ func evalExpressions(exps []ast.Expression, env *value.Environment) []value.Wrap
 	}
 
 	return results
+}
+
+func evalIndexExpression(left, index value.Wrapper) value.Wrapper {
+	switch {
+	case left.Type() == value.ARRAY && index.Type() == value.INTEGER:
+		return evalArrayIndexExpression(left, index)
+	default:
+		return newError("index operator not supported: %s", left.Type())
+	}
+}
+
+func evalArrayIndexExpression(array, index value.Wrapper) value.Wrapper {
+	arrayWrapper := array.(*value.Array)
+	idx := index.(*value.Integer).Value
+	maxIdx := int64(len(arrayWrapper.Elements) - 1)
+
+	if idx < 0 || idx > maxIdx {
+		return NULL
+	}
+
+	return arrayWrapper.Elements[idx]
 }
 
 func applyFunction(fn value.Wrapper, args []value.Wrapper) value.Wrapper {
