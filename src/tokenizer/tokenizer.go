@@ -52,6 +52,8 @@ func (t *Tokenizer) NextToken() token.Token {
 		}
 	case ';':
 		parsedToken = token.Token{Type: token.SEMICOLON, Literal: string(t.ch)}
+	case ':':
+		parsedToken = token.Token{Type: token.COLON, Literal: string(t.ch)}
 	case '(':
 		parsedToken = token.Token{Type: token.LPAREN, Literal: string(t.ch)}
 	case ')':

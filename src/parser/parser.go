@@ -40,6 +40,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNC, p.parseFunctionLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(token.LBRACE, p.parseDictLiteral)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.EQUALS, p.parseInfixExpression)
@@ -412,6 +413,35 @@ func (p *Parser) parseArrayLiteral() ast.Expression {
 	array.Elements = p.parseExpressionList(token.RBRACKET)
 
 	return array
+}
+
+func (p *Parser) parseDictLiteral() ast.Expression {
+	dict := &ast.DictLiteral{Token: p.currentToken}
+	dict.Elements = make(map[ast.Expression]ast.Expression)
+
+	for !p.checkPeekTokenType(token.RBRACE) {
+		p.nextToken()
+		key := p.parseExpression(LOWEST)
+
+		if !p.peekAndMove(token.COLON) {
+			return nil
+		}
+
+		p.nextToken()
+		value := p.parseExpression(LOWEST)
+
+		dict.Elements[key] = value
+
+		if !p.checkPeekTokenType(token.RBRACE) && !p.peekAndMove(token.COMMA) {
+			return nil
+		}
+	}
+
+	if !p.peekAndMove(token.RBRACE) {
+		return nil
+	}
+
+	return dict
 }
 
 func (p *Parser) parseExpressionList(end token.Type) []ast.Expression {

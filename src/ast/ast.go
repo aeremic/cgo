@@ -380,3 +380,29 @@ func (ie *IndexExpression) String() string {
 
 	return out.String()
 }
+
+type DictLiteral struct {
+	Token    token.Token
+	Elements map[Expression]Expression
+}
+
+func (dl *DictLiteral) expressionNode() {}
+
+func (dl *DictLiteral) TokenLiteral() string {
+	return dl.Token.Literal
+}
+
+func (dl *DictLiteral) String() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for key, value := range dl.Elements {
+		elements = append(elements, key.String()+":"+value.String())
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}

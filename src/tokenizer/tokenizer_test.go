@@ -49,6 +49,8 @@ func TestRead(t *testing.T) {
 		"foo \"barfoo\""
 
 		[1, 2];
+
+		{"foo": "bar"};
 	`
 
 	expectedTokens := []struct {
@@ -142,6 +144,13 @@ func TestRead(t *testing.T) {
 		{token.COMMA, ","},
 		{token.INT, "2"},
 		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
+
+		{token.LBRACE, "{"},
+		{token.STRING, "foo"},
+		{token.COLON, ":"},
+		{token.STRING, "bar"},
+		{token.RBRACE, "}"},
 		{token.SEMICOLON, ";"},
 	}
 

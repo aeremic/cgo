@@ -855,3 +855,75 @@ func TestParsingIndexExpressions(t *testing.T) {
 		return
 	}
 }
+
+func TestParsingDictLiteralsStringKeys(t *testing.T) {
+	input := `{"one": 1, "two": 2, "three": 3}`
+
+	program := setUpTest(t, input)
+
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements doesn't contain 1 statements. Got %d",
+			len(program.Statements))
+	}
+
+	statement := program.Statements[0].(*ast.ExpressionStatement)
+	dict, ok := statement.Expression.(*ast.DictLiteral)
+	if !ok {
+		t.Fatalf("statement.Expression is not DictLiteral. Got %T",
+			statement.Expression)
+	}
+
+	if len(dict.Elements) != 3 {
+		t.Errorf("invalid number of elements in dict. got %d instead of %d",
+			len(dict.Elements), 3)
+	}
+
+	expected := map[string]int64{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+	}
+
+	for key, value := range dict.Elements {
+		literal, ok := key.(*ast.StringLiteral)
+		if !ok {
+			t.Errorf("invalid element key. got %T", key)
+		}
+
+		expectedValue := expected[literal.String()]
+
+		testIntegerLiteralExpression(t, value, expectedValue)
+	}
+}
+
+func TestParsingEmptyDictLiteral(t *testing.T) {
+	input := `{}`
+
+	program := setUpTest(t, input)
+
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements doesn't contain 1 statements. Got %d",
+			len(program.Statements))
+	}
+
+	statement := program.Statements[0].(*ast.ExpressionStatement)
+	dict, ok := statement.Expression.(*ast.DictLiteral)
+	if !ok {
+		t.Fatalf("statement.Expression is not DictLiteral. Got %T",
+			statement.Expression)
+	}
+
+	if len(dict.Elements) != 0 {
+		t.Errorf("invalid number of elements in dict. got %d instead of %d",
+			len(dict.Elements), 0)
+	}
+
+}
