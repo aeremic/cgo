@@ -449,3 +449,66 @@ func TestArrayIndexExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestStringDictKey(t *testing.T) {
+	hello1 := &value.String{Value: "hello"}
+	hello2 := &value.String{Value: "hello"}
+	world1 := &value.String{Value: "world"}
+	world2 := &value.String{Value: "world"}
+
+	if hello1.HashKey() != hello2.HashKey() {
+		t.Errorf("strings with same content have different hash keys %s[%d] %s[%d]",
+			hello1.Value, hello1.HashKey().Value, hello2.Value, hello2.HashKey().Value)
+	}
+
+	if world1.HashKey() != world2.HashKey() {
+		t.Errorf("strings with same content have different hash keys %s[%d] %s[%d]",
+			world1.Value, world1.HashKey().Value, world2.Value, world2.HashKey().Value)
+	}
+
+	if hello1.HashKey() == world1.HashKey() {
+		t.Errorf("strings with different content have same hash keys %d %d",
+			hello1.HashKey().Value, world1.HashKey().Value)
+	}
+}
+
+func TestHashLiterals(t *testing.T) {
+	input := `let two = "two";
+	{
+		"one": 10 - 9,
+		two: 1 + 1,
+		"thr" + "ee": 6 / 2,
+		4: 4,
+		true: 5,
+		false: 6
+	}`
+
+	evaluated := testEval(input)
+	result, ok := evaluated.(*value.Dict)
+	if !ok {
+		t.Fatalf("invalid type. expected Dict got %T (%+v)", evaluated, evaluated)
+	}
+
+	expected := map[value.HashKey]int64{
+		(&value.String{Value: "one"}).HashKey():   1,
+		(&value.String{Value: "two"}).HashKey():   2,
+		(&value.String{Value: "three"}).HashKey(): 3,
+		(&value.Integer{Value: 4}).HashKey():      4,
+		TRUE.HashKey():                            5,
+		FALSE.HashKey():                           6,
+	}
+
+	if len(result.Elements) != len(expected) {
+		t.Fatalf("invalid number of elements. got %d instead of %d",
+			len(result.Elements), len(expected))
+	}
+
+	for expectedKey, expectedValue := range expected {
+		actualValue, ok := result.Elements[expectedKey]
+		if !ok {
+			t.Errorf("no element for expected key %d", expectedKey.Value)
+		}
+
+		testIntegerValueWrapper(t, actualValue.Value, expectedValue)
+	}
+}

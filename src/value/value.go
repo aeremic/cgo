@@ -3,6 +3,7 @@ package value
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"github.com/aeremic/cgo/ast"
@@ -21,11 +22,21 @@ const (
 	FUNCTION = "FUNCTION"
 	BUILTIN  = "BUILTIN"
 	ARRAY    = "ARRAY"
+	DICT     = "DICT"
 )
 
 type Wrapper interface {
 	Type() Type
 	Sprintf() string
+}
+
+type Hashable interface {
+	HashKey() HashKey
+}
+
+type HashKey struct {
+	Type  Type
+	Value uint64
 }
 
 type Integer struct {
@@ -40,6 +51,10 @@ func (i *Integer) Sprintf() string {
 	return fmt.Sprintf("%d", i.Value)
 }
 
+func (i *Integer) HashKey() HashKey {
+	return HashKey{Type: i.Type(), Value: uint64(i.Value)}
+}
+
 type String struct {
 	Value string
 }
@@ -52,6 +67,13 @@ func (s *String) Sprintf() string {
 	return s.Value
 }
 
+func (s *String) HashKey() HashKey {
+	hash := fnv.New64()
+	hash.Write([]byte(s.Value))
+
+	return HashKey{Type: s.Type(), Value: hash.Sum64()}
+}
+
 type Boolean struct {
 	Value bool
 }
@@ -62,6 +84,18 @@ func (b *Boolean) Type() Type {
 
 func (b *Boolean) Sprintf() string {
 	return fmt.Sprintf("%t", b.Value)
+}
+
+func (b *Boolean) HashKey() HashKey {
+	var value uint64
+
+	if b.Value {
+		value = 1
+	} else {
+		value = 0
+	}
+
+	return HashKey{Type: b.Type(), Value: value}
 }
 
 type Null struct{}
@@ -157,6 +191,35 @@ func (a *Array) Sprintf() string {
 	out.WriteString("[")
 	out.WriteString(strings.Join(elements, ", "))
 	out.WriteString("]")
+
+	return out.String()
+}
+
+type DictElement struct {
+	Key   Wrapper
+	Value Wrapper
+}
+
+type Dict struct {
+	Elements map[HashKey]DictElement
+}
+
+func (d *Dict) Type() Type {
+	return DICT
+}
+
+func (d *Dict) Sprintf() string {
+	var out bytes.Buffer
+
+	elements := []string{}
+	for _, element := range d.Elements {
+		elements = append(elements, fmt.Sprintf("%s: %s",
+			element.Key.Sprintf(), element.Value.Sprintf()))
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("}")
 
 	return out.String()
 }

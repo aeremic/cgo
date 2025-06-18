@@ -104,6 +104,8 @@ func Eval(node ast.Node, env *value.Environment) value.Wrapper {
 		}
 
 		return evalIndexExpression(left, index)
+	case *ast.DictLiteral:
+		return evalDictLiteral(node, env)
 	}
 
 	return nil
@@ -281,6 +283,32 @@ func applyFunction(fn value.Wrapper, args []value.Wrapper) value.Wrapper {
 	default:
 		return newError("not a function: %s", fn.Type())
 	}
+}
+
+func evalDictLiteral(dict *ast.DictLiteral, env *value.Environment) value.Wrapper {
+	elements := make(map[value.HashKey]value.DictElement)
+
+	for dlKey, dlValue := range dict.Elements {
+		evalKey := Eval(dlKey, env)
+		if isError(evalKey) {
+			return evalKey
+		}
+
+		evalValue := Eval(dlValue, env)
+		if isError(evalValue) {
+			return evalValue
+		}
+
+		hashKey, ok := evalKey.(value.Hashable)
+		if !ok {
+			return newError("unusable hash key: %s", evalKey.Type())
+		}
+
+		hashed := hashKey.HashKey()
+		elements[hashed] = value.DictElement{Key: evalKey, Value: evalValue}
+	}
+
+	return &value.Dict{Elements: elements}
 }
 
 func createExtendedEnv(fn *value.Function, args []value.Wrapper) *value.Environment {
