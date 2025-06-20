@@ -254,6 +254,8 @@ func evalIndexExpression(left, index value.Wrapper) value.Wrapper {
 	switch {
 	case left.Type() == value.ARRAY && index.Type() == value.INTEGER:
 		return evalArrayIndexExpression(left, index)
+	case left.Type() == value.DICT:
+		return evalDictIndexExpression(left, index)
 	default:
 		return newError("index operator not supported: %s", left.Type())
 	}
@@ -269,6 +271,22 @@ func evalArrayIndexExpression(array, index value.Wrapper) value.Wrapper {
 	}
 
 	return arrayWrapper.Elements[idx]
+}
+
+func evalDictIndexExpression(dict, index value.Wrapper) value.Wrapper {
+	dictWrapper := dict.(*value.Dict)
+
+	key, ok := index.(value.Hashable)
+	if !ok {
+		return newError("unusable as hash key: %s", index.Type())
+	}
+
+	element, ok := dictWrapper.Elements[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return element.Value
 }
 
 func applyFunction(fn value.Wrapper, args []value.Wrapper) value.Wrapper {
