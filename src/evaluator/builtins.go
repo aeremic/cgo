@@ -1,6 +1,10 @@
 package evaluator
 
-import "github.com/aeremic/cgo/value"
+import (
+	"fmt"
+
+	"github.com/aeremic/cgo/value"
+)
 
 var builtins = map[string]*value.BuiltIn{
 	"len": {
@@ -105,6 +109,15 @@ var builtins = map[string]*value.BuiltIn{
 			newElements = append(newElements, args[1])
 
 			return &value.Array{Elements: newElements}
+		},
+	},
+	"puts": {
+		Fn: func(args ...value.Wrapper) value.Wrapper {
+			for _, arg := range args {
+				fmt.Println(arg.Sprintf())
+			}
+
+			return NULL
 		},
 	},
 }
